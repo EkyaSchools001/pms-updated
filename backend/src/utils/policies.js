@@ -1,0 +1,35 @@
+/**
+ * ROLE-BASED ACCESS CONTROL (RBAC) POLICIES
+ * Defines what each role can do across the system.
+ */
+
+const ROLES = {
+    ADMIN: 'ADMIN',
+    MANAGER: 'MANAGER',
+    EMPLOYEE: 'EMPLOYEE',
+    CUSTOMER: 'CUSTOMER',
+};
+
+const POLICIES = {
+    PROJECTS: {
+        CREATE: [ROLES.ADMIN, ROLES.MANAGER],
+        VIEW_ALL: [ROLES.ADMIN],
+        VIEW_ASSIGNED: [ROLES.MANAGER, ROLES.EMPLOYEE, ROLES.CUSTOMER],
+        UPDATE: [ROLES.ADMIN, ROLES.MANAGER],
+        DELETE: [ROLES.ADMIN],
+    },
+    TASKS: {
+        CREATE: [ROLES.ADMIN, ROLES.MANAGER],
+        UPDATE: [ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE],
+        DELETE: [ROLES.ADMIN, ROLES.MANAGER],
+    },
+    FINANCES: {
+        VIEW: [ROLES.ADMIN],
+        MANAGE: [ROLES.ADMIN],
+    },
+    USERS: {
+        MANAGE: [ROLES.ADMIN],
+    }
+};
+
+module.exports = { ROLES, POLICIES };

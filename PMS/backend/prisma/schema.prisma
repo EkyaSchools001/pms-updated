@@ -1,0 +1,502 @@
+// Phase 1: Database Schema
+// ORM: Prisma
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// Enums for Role-Based Access Control
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+  CUSTOMER
+}
+
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+}
+
+enum ParticipantRole {
+  ORGANIZER
+  ATTENDEE
+}
+
+enum CalendarType {
+  PERSONAL
+  TEAM
+  PROJECT
+}
+
+enum SharePermission {
+  READ
+  EDIT
+}
+
+// 1. User Management
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         Role     @default(EMPLOYEE)
+  department   String?  // New: Organization unit
+  dateOfBirth  DateTime? // New: Birthday
+  profilePicture String? // URL to profile picture
+  createdAt    DateTime @default(now())
+
+  updatedAt    DateTime @updatedAt
+
+  // Hierarchical Relations
+  managerId    String?
+  manager      User?     @relation("UserManager", fields: [managerId], references: [id])
+  employees    User[]    @relation("UserManager")
+
+  // Relations
+  managedProjects  Project[] @relation("ProjectManager")
+  customerProjects Project[] @relation("ProjectCustomer")
+  memberProjects   Project[] @relation("ProjectMembers") // New: Team members
+
+  assignedTasks   Task[]    @relation("TaskAssignees") // Changed to Many-to-Many
+  timeLogs        TimeLog[]
+  expenses        Expense[]
+  ticketsRaised   Ticket[]  @relation("TicketReporter")
+  ticketsAssigned Ticket[]  @relation("TicketAssignee")
+
+  // Chat Relations
+  chats        ChatParticipant[]
+  messagesSent Message[]
+
+  // Calendar & Meeting Relations
+  calendarViews  CalendarView[]
+  sharedViews    CalendarShare[]
+  meetingsOrganized Meeting[]    @relation("MeetingOrganizer")
+  meetingInvites    MeetingParticipant[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  campusAccess      String?        // Comma-separated campuses
+  ticketComments    TicketComment[] @relation("CommentAuthor")
+
+  // Google Integration
+  googleAccessToken  String?
+  googleRefreshToken String?
+  googleEmail        String?
+}
+
+
+
+// 2. Project Management
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(NOT_STARTED)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Decimal       @default(0.0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Foreign Keys
+  managerId String
+  manager   User   @relation("ProjectManager", fields: [managerId], references: [id])
+
+  customerId String?
+  customer   User?   @relation("ProjectCustomer", fields: [customerId], references: [id])
+
+  // Relations
+  members        User[]             @relation("ProjectMembers") // New: Team members
+  tasks          Task[]
+  timeLogs       TimeLog[]
+  invoices       Invoice[]
+  expenses       Expense[]
+  inventoryUsage ProjectInventory[]
+  tickets        Ticket[]
+
+  // Chat
+  chat Chat?
+
+  // Meetings
+  meetings Meeting[]
+}
+
+// 3. Task Management
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  startDate   DateTime?
+  dueDate     DateTime?
+  isMilestone Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Foreign Keys
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  // Changed: Multiple assignees
+  assignees User[] @relation("TaskAssignees")
+
+  // Relations
+  timeLogs TimeLog[]
+}
+
+// 4. Time Tracking
+model TimeLog {
+  id          String   @id @default(uuid())
+  date        DateTime
+  hours       Decimal
+  description String?
+  isApproved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // Foreign Keys
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id])
+}
+
+// 5. Invoice & Expenses
+model Invoice {
+  id         String        @id @default(uuid())
+  amount     Decimal
+  status     InvoiceStatus @default(DRAFT)
+  dueDate    DateTime
+  issuedDate DateTime      @default(now())
+
+  // Foreign Keys
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  amount      Decimal
+  category    String
+  description String?
+  date        DateTime @default(now())
+  receiptUrl  String? // URL to stored image
+
+  // Foreign Keys
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  incurredById String
+  incurredBy   User   @relation(fields: [incurredById], references: [id])
+}
+
+// 6. Inventory & Assets
+model InventoryItem {
+  id        String  @id @default(uuid())
+  name      String
+  sku       String  @unique
+  totalQty  Int     @default(0)
+  unitPrice Decimal @default(0.0)
+
+  // Relations
+  projectUsage ProjectInventory[]
+}
+
+model ProjectInventory {
+  id           String   @id @default(uuid())
+  quantityUsed Int
+  assignedDate DateTime @default(now())
+
+  // Foreign Keys
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+}
+
+// 7. Ticketing System
+model Ticket {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  status      TicketStatus @default(OPEN)
+  priority    TaskPriority @default(MEDIUM)
+  campus      String?      // New: Campus location
+  category    String?      // New: Ticket category (IT, Facilities, etc.)
+  slaDeadline DateTime?    // New: SLA deadline
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Foreign Keys
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  reporterId String
+  reporter   User   @relation("TicketReporter", fields: [reporterId], references: [id])
+
+  assigneeId String?
+  assignee   User?   @relation("TicketAssignee", fields: [assigneeId], references: [id])
+
+  lastReminderSentAt DateTime?
+  comments           TicketComment[]
+}
+
+model TicketComment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  
+  authorId  String
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id])
+}
+
+
+// 8. Chat System
+enum ChatType {
+  PRIVATE
+  GROUP
+  PROJECT_GROUP
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  type      ChatType @default(PRIVATE)
+  name      String? // For group chats
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  participants ChatParticipant[]
+  messages     Message[]
+
+  // For Project Group Chat
+  projectId String?  @unique
+  project   Project? @relation(fields: [projectId], references: [id])
+}
+
+model ChatParticipant {
+  id         String    @id @default(uuid())
+  joinedAt   DateTime  @default(now())
+  lastReadAt DateTime? // For unread status
+
+  // Foreign Keys
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([chatId, userId])
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  // Attachments (JSON for flexibility)
+  attachments String? // JSON string or URL
+
+  // Foreign Keys
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id])
+}
+
+// 9. Calendar System
+model CalendarView {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      CalendarType @default(PERSONAL)
+  filters   String?  // JSON preferences: { assignee: [], priority: [], tags: [] }
+  layers    String?  // JSON preferences: { projects: [], taskTypes: [] }
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shares    CalendarShare[]
+}
+
+model CalendarShare {
+  id              String   @id @default(uuid())
+  calendarViewId  String
+  calendarView    CalendarView @relation(fields: [calendarViewId], references: [id])
+  sharedWithUserId String?
+  sharedWith      User?     @relation(fields: [sharedWithUserId], references: [id])
+  permission      SharePermission @default(READ)
+  createdAt       DateTime @default(now())
+}
+
+// 10. Meeting & Room Management
+model Meeting {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  isOnline    Boolean       @default(false)
+  meetingLink String?
+  status      MeetingStatus @default(SCHEDULED)
+  
+  // Relations
+  roomId      String?
+  room        MeetingRoom?  @relation(fields: [roomId], references: [id])
+  
+  organizerId String
+  organizer   User          @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id])
+  
+  participants MeetingParticipant[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  googleEventId String?
+}
+
+model MeetingParticipant {
+  id        String            @id @default(uuid())
+  meetingId String
+  meeting   Meeting           @relation(fields: [meetingId], references: [id])
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  status    ParticipantStatus @default(PENDING)
+  role      ParticipantRole   @default(ATTENDEE)
+
+  @@unique([meetingId, userId])
+}
+
+model MeetingRoom {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   @default("MEETING") // MEETING, INTERVIEW
+  capacity    Int
+  location    String?
+  isActive    Boolean  @default(true)
+  
+  availability RoomAvailabilitySlot[]
+  blockedSlots RoomBlockedSlot[]
+  meetings     Meeting[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model RoomAvailabilitySlot {
+  id        String      @id @default(uuid())
+  roomId    String
+  room      MeetingRoom @relation(fields: [roomId], references: [id])
+  dayOfWeek Int         // 0-6 (Sunday-Saturday)
+  startTime String      // "HH:mm"
+  endTime   String      // "HH:mm"
+}
+
+model RoomBlockedSlot {
+  id        String      @id @default(uuid())
+  roomId    String
+  room      MeetingRoom @relation(fields: [roomId], references: [id])
+  startTime DateTime
+  endTime   DateTime
+  reason    String?
+}
+
+// 11. Audit Logs
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  entityType  String
+  entityId    String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  details     String?
+  createdAt   DateTime @default(now())
+}
+
+// 12. Notifications
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  PROJECT_INVITE
+  MESSAGE_RECEIVED
+  TICKET_ASSIGNED
+  REMINDER
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType @default(SYSTEM)
+  title     String
+  content   String
+  link      String?          // Redirection path
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Foreign Keys
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+}
+
