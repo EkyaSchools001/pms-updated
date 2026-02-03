@@ -34,6 +34,10 @@ Thumbs.db
 *.swo
 
 # Project specific
+backend/node_modules/
+frontend/node_modules/
+backend/.env
 backend/error.log
 backend/uploads/
 !backend/uploads/.gitkeep
+postgres_data/

@@ -4,8 +4,8 @@
   "description": "Project Management System",
   "main": "index.js",
   "scripts": {
-    "start": "npm start --prefix backend",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend && npm install --prefix backend && npm run generate --prefix backend",
+    "start": "cd backend && npm start",
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
