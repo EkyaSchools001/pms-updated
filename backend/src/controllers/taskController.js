@@ -55,7 +55,7 @@ const getProjectTasks = async (req, res) => {
         let whereClause = { projectId };
 
         // Visibility Rules
-        if (role === ROLES.EMPLOYEE) {
+        if (role === ROLES.TEAM_MEMBER) {
             // Employee sees only tasks assigned to them
             whereClause.assignees = {
                 some: { id: userId }

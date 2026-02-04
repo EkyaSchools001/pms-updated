@@ -8,13 +8,26 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+        const fetchUser = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const { data } = await api.get('auth/me');
+                    localStorage.setItem('user', JSON.stringify(data));
+                    setUser(data);
+                } catch (error) {
+                    console.error('Failed to fetch user:', error);
+                    // If fetching fails, logout as token might be invalid
+                    logout();
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
+            }
+        };
 
-        if (token && storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
+        fetchUser();
     }, []);
 
     const login = async (email, password) => {
@@ -50,8 +63,21 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const googleLogin = async (credential) => {
+        try {
+            const { data } = await api.post('auth/google', { credential });
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('userId', data.user.id);
+            setUser(data.user);
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Google login failed' };
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, googleLogin, loading }}>
             {children}
         </AuthContext.Provider>
     );

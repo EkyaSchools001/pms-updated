@@ -31,7 +31,7 @@ const authorizeRole = (requiredRoles) => {
  * Middleware to check project ownership/access.
  * - ADMIN: Access all
  * - MANAGER: Must be project manager
- * - EMPLOYEE: Must be a member of the project
+ * - TEAM_MEMBER: Must be a member of the project
  * - CUSTOMER: Must be the client of the project
  */
 const validateProjectAccess = async (req, res, next) => {
@@ -62,7 +62,7 @@ const validateProjectAccess = async (req, res, next) => {
         const isMember = project.members.some(m => m.id === userId);
 
         if (role === ROLES.MANAGER && isManager) return next();
-        if (role === ROLES.EMPLOYEE && isMember) return next();
+        if (role === ROLES.TEAM_MEMBER && isMember) return next();
         if (role === ROLES.CUSTOMER && isCustomer) return next();
 
         return res.status(403).json({ message: 'Access denied: You are not assigned to this project' });
@@ -101,7 +101,7 @@ const validateTaskAccess = async (req, res, next) => {
         const isAssignee = task.assignees.some(a => a.id === userId);
 
         if (role === ROLES.MANAGER && isProjectManager) return next();
-        if (role === ROLES.EMPLOYEE && isAssignee) return next();
+        if (role === ROLES.TEAM_MEMBER && isAssignee) return next();
 
         return res.status(403).json({ message: 'Access denied: You are not assigned to this task' });
     } catch (error) {

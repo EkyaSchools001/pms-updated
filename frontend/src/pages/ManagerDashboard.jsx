@@ -23,7 +23,7 @@ import clsx from 'clsx';
 const ManagerDashboard = () => {
     const { user } = useAuth();
     const [tickets, setTickets] = useState([]);
-    const [itEmployees, setItEmployees] = useState([]);
+    const [teamMembers, setTeamMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
@@ -31,8 +31,20 @@ const ManagerDashboard = () => {
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [ticketLogs, setTicketLogs] = useState([]);
     const [commentText, setCommentText] = useState('');
+    const [assignmentMode, setAssignmentMode] = useState('individual'); // 'individual' or 'department'
 
     const campuses = user?.campusAccess ? user.campusAccess.split(',').map(c => c.trim()) : ['Campus A', 'Campus B', 'Campus C'];
+
+    // Department list
+    const departments = [
+        'IT Support',
+        'Facilities Management',
+        'Human Resources',
+        'Finance',
+        'Operations',
+        'Maintenance',
+        'Administration'
+    ];
 
     const fetchTicketLogs = async (ticketId) => {
         try {
@@ -56,8 +68,8 @@ const ManagerDashboard = () => {
                 api.get('users')
             ]);
             setTickets(ticketsRes.data);
-            // Filter users with EMPLOYEE role for assignment
-            setItEmployees(usersRes.data.filter(u => u.role === 'EMPLOYEE'));
+            // Filter users with TEAM_MEMBER role for assignment
+            setTeamMembers(usersRes.data.filter(u => u.role === 'TEAM_MEMBER'));
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
@@ -75,11 +87,26 @@ const ManagerDashboard = () => {
             fetchData();
             fetchTicketLogs(ticketId);
             if (selectedTicket) {
-                setSelectedTicket(prev => ({ ...prev, assigneeId }));
+                setSelectedTicket(prev => ({ ...prev, assigneeId, assignedDepartment: null }));
             }
             alert('Ticket assigned successfully!');
         } catch (error) {
             console.error('Error assigning ticket:', error);
+            alert(`Failed to assign ticket: ${error.response?.data?.message || error.message}`);
+        }
+    };
+
+    const handleAssignDepartment = async (ticketId, department) => {
+        try {
+            await api.put(`tickets/${ticketId}`, { assignedDepartment: department, assigneeId: null });
+            fetchData();
+            fetchTicketLogs(ticketId);
+            if (selectedTicket) {
+                setSelectedTicket(prev => ({ ...prev, assignedDepartment: department, assigneeId: null }));
+            }
+            alert(`Ticket assigned to ${department} department successfully!`);
+        } catch (error) {
+            console.error('Error assigning to department:', error);
         }
     };
 
@@ -252,13 +279,37 @@ const ManagerDashboard = () => {
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
-                                                {ticket.assignee?.fullName?.charAt(0) || '?'}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-gray-900">{ticket.assignee?.fullName || 'Unassigned'}</span>
-                                                <span className="text-[10px] text-gray-500 capitalize">{ticket.assignee?.role?.toLowerCase() || 'N/A'}</span>
-                                            </div>
+                                            {ticket.assignedDepartment ? (
+                                                <>
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                                                        {ticket.assignedDepartment.charAt(0)}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-gray-900">{ticket.assignedDepartment}</span>
+                                                        <span className="text-[10px] text-purple-600 uppercase font-black">Department</span>
+                                                    </div>
+                                                </>
+                                            ) : ticket.assignee ? (
+                                                <>
+                                                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                        {ticket.assignee?.fullName?.charAt(0) || '?'}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-gray-900">{ticket.assignee?.fullName}</span>
+                                                        <span className="text-[10px] text-gray-500 capitalize">{ticket.assignee?.role?.toLowerCase() || 'N/A'}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                        ?
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-gray-900">Unassigned</span>
+                                                        <span className="text-[10px] text-gray-500">N/A</span>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
@@ -363,45 +414,113 @@ const ManagerDashboard = () => {
 
                             {/* Controls */}
                             <div className="space-y-6">
+                                {/* Assignment Mode Toggle */}
                                 <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Assign to Employee</label>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {itEmployees.map(emp => {
-                                            const workload = tickets.filter(t => t.assigneeId === emp.id && t.status !== 'CLOSED').length;
-                                            return (
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Assignment Type</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setAssignmentMode('individual')}
+                                            className={clsx(
+                                                "flex-1 px-4 py-2 rounded-xl text-[10px] font-black transition-all",
+                                                assignmentMode === 'individual'
+                                                    ? "bg-primary text-white"
+                                                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                            )}
+                                        >
+                                            INDIVIDUAL TEAM MEMBER
+                                        </button>
+                                        <button
+                                            onClick={() => setAssignmentMode('department')}
+                                            className={clsx(
+                                                "flex-1 px-4 py-2 rounded-xl text-[10px] font-black transition-all",
+                                                assignmentMode === 'department'
+                                                    ? "bg-primary text-white"
+                                                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                            )}
+                                        >
+                                            DEPARTMENT
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Department Assignment */}
+                                {assignmentMode === 'department' && (
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Assign to Department</label>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {departments.map(dept => (
                                                 <button
-                                                    key={emp.id}
-                                                    onClick={() => handleAssign(selectedTicket.id, emp.id)}
+                                                    key={dept}
+                                                    onClick={() => handleAssignDepartment(selectedTicket.id, dept)}
                                                     className={clsx(
                                                         "flex items-center justify-between p-4 rounded-2xl border transition-all",
-                                                        selectedTicket.assigneeId === emp.id
-                                                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                                        selectedTicket.assignedDepartment === dept
+                                                            ? "border-purple-500 bg-purple-50 ring-1 ring-purple-500/20"
                                                             : "border-gray-100 hover:bg-gray-50"
                                                     )}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white flex items-center justify-center font-bold">
-                                                            {emp.fullName.charAt(0)}
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold">
+                                                            {dept.charAt(0)}
                                                         </div>
                                                         <div className="text-left">
-                                                            <p className="text-sm font-bold text-gray-900">{emp.fullName}</p>
-                                                            <p className="text-[10px] text-gray-500">IT Specialist</p>
+                                                            <p className="text-sm font-bold text-gray-900">{dept}</p>
+                                                            <p className="text-[10px] text-gray-500">Department</p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <span className="text-[10px] font-black text-gray-400 uppercase block mb-1">Workload</span>
-                                                        <span className={clsx(
-                                                            "px-2 py-0.5 rounded text-[8px] font-black border",
-                                                            workload > 5 ? "bg-red-50 text-red-600 border-red-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                                        )}>
-                                                            {workload} ACTIVE
+                                                    {selectedTicket.assignedDepartment === dept && (
+                                                        <span className="px-2 py-0.5 rounded text-[8px] font-black bg-purple-100 text-purple-600 border border-purple-200">
+                                                            ASSIGNED
                                                         </span>
-                                                    </div>
+                                                    )}
                                                 </button>
-                                            );
-                                        })}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Individual Team Member Assignment */}
+                                {assignmentMode === 'individual' && (
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Assign to Team Member</label>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {teamMembers.map(emp => {
+                                                const workload = tickets.filter(t => t.assigneeId === emp.id && t.status !== 'CLOSED').length;
+                                                return (
+                                                    <button
+                                                        key={emp.id}
+                                                        onClick={() => handleAssign(selectedTicket.id, emp.id)}
+                                                        className={clsx(
+                                                            "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                                                            selectedTicket.assigneeId === emp.id
+                                                                ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                                                : "border-gray-100 hover:bg-gray-50"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white flex items-center justify-center font-bold">
+                                                                {emp.fullName.charAt(0)}
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className="text-sm font-bold text-gray-900">{emp.fullName}</p>
+                                                                <p className="text-[10px] text-gray-500">{emp.department || 'IT Specialist'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-[10px] font-black text-gray-400 uppercase block mb-1">Workload</span>
+                                                            <span className={clsx(
+                                                                "px-2 py-0.5 rounded text-[8px] font-black border",
+                                                                workload > 5 ? "bg-red-50 text-red-600 border-red-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                                            )}>
+                                                                {workload} ACTIVE
+                                                            </span>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Update Status</label>

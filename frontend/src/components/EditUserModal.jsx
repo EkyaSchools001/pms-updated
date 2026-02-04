@@ -22,7 +22,7 @@ const EditUserModal = ({ user, onClose, onSuccess, allUsers }) => {
             setFormData({
                 fullName: user.fullName || '',
                 email: user.email || '',
-                role: user.role || 'EMPLOYEE',
+                role: user.role || 'TEAM_MEMBER',
                 department: user.department || '',
                 managerId: user.manager?.id || user.managerId || '',
                 dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : ''
@@ -104,7 +104,7 @@ const EditUserModal = ({ user, onClose, onSuccess, allUsers }) => {
                                     value={formData.role}
                                     onChange={e => setFormData({ ...formData, role: e.target.value })}
                                 >
-                                    <option value="EMPLOYEE">Employee</option>
+                                    <option value="TEAM_MEMBER">Team Member</option>
                                     <option value="MANAGER">Manager</option>
                                     <option value="ADMIN">Admin</option>
                                     <option value="CUSTOMER">Customer</option>

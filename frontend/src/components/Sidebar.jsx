@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-import { LayoutDashboard, FolderKanban, CheckSquare, LogOut, Settings, PieChart, Users, MessageSquare, Calendar, Ticket, Gift, Sun, Moon, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, CheckSquare, LogOut, Settings, PieChart, Users, MessageSquare, Calendar, Ticket, Gift, Sun, Moon, X, Headset, BarChart3 } from 'lucide-react';
 import api from '../services/api';
 import clsx from 'clsx';
 
@@ -60,16 +60,14 @@ const Sidebar = ({ isOpen, onClose }) => {
 
 
     const allNavItems = [
-        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'] },
-        { label: 'Ticket Manager DB', path: '/manager-dashboard', icon: PieChart, roles: ['ADMIN', 'MANAGER'] },
-        { label: 'Projects', path: '/projects', icon: FolderKanban, roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'] },
-
-        { label: 'Team Members', path: '/team', icon: Users, roles: ['ADMIN', 'MANAGER'] },
-        { label: 'Chat', path: '/chat', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'] },
-        { label: 'Calendar', path: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'] },
-        { label: 'My Tasks', path: '/tasks', icon: CheckSquare, roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'] },
-
-        { label: 'Reports', path: '/reports', icon: PieChart, roles: ['ADMIN', 'MANAGER'] },
+        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'] },
+        { label: 'Ticket Manager', path: '/manager-dashboard', icon: Headset, roles: ['ADMIN', 'MANAGER'] },
+        { label: 'Projects', path: '/projects', icon: FolderKanban, roles: ['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'] },
+        { label: 'Team Members', path: '/team', icon: Users, roles: ['ADMIN', 'MANAGER', 'TEAM_MEMBER'] },
+        { label: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
+        { label: 'Chat', path: '/chat', icon: MessageSquare, roles: ['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'] },
+        { label: 'Calendar', path: '/calendar', icon: Calendar, roles: ['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'] },
+        { label: 'My Tasks', path: '/tasks', icon: CheckSquare, roles: ['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'] },
     ];
 
 

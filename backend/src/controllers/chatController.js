@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prisma');
 
 // Create a private chat (1-on-1)
 exports.createPrivateChat = async (req, res) => {
@@ -182,6 +181,83 @@ exports.getUserChats = async (req, res) => {
         res.json(chats);
     } catch (error) {
         console.error('Error fetching user chats:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Edit a message
+exports.editMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { content } = req.body;
+        const userId = req.user.id;
+
+        const message = await prisma.message.findUnique({
+            where: { id: messageId }
+        });
+
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        if (message.senderId !== userId) {
+            return res.status(403).json({ error: 'Unauthorized to edit this message' });
+        }
+
+        const updatedMessage = await prisma.message.update({
+            where: { id: messageId },
+            data: { content, updatedAt: new Date() },
+            include: {
+                sender: { select: { id: true, fullName: true } },
+            },
+        });
+
+        // Emit socket event
+        const io = req.app.get('io');
+        io.to(message.chatId).emit('message_edited', updatedMessage);
+
+        res.json(updatedMessage);
+    } catch (error) {
+        console.error('Error editing message:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Delete a message (for everyone)
+exports.deleteMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const userId = req.user.id;
+
+        const message = await prisma.message.findUnique({
+            where: { id: messageId }
+        });
+
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        if (message.senderId !== userId) {
+            return res.status(403).json({ error: 'Unauthorized to delete this message' });
+        }
+
+        // Soft delete: Keep record but clear content and mark as deleted
+        await prisma.message.update({
+            where: { id: messageId },
+            data: {
+                deletedAt: new Date(),
+                content: 'This message was deleted',
+                attachments: null
+            }
+        });
+
+        // Emit socket event
+        const io = req.app.get('io');
+        io.to(message.chatId).emit('message_deleted', { messageId, chatId: message.chatId });
+
+        res.json({ message: 'Message deleted for everyone' });
+    } catch (error) {
+        console.error('Error deleting message:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

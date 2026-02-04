@@ -41,7 +41,7 @@ const DashboardLayout = ({ children }) => {
         setShowProfileDropdown(false);
 
         // Check if user has permission to edit
-        if (!canEditProfile() && user?.role !== 'EMPLOYEE' && user?.role !== 'CUSTOMER') {
+        if (!canEditProfile() && user?.role !== 'TEAM_MEMBER' && user?.role !== 'CUSTOMER') {
             alert('You do not have permission to edit profiles.');
             return;
         }
@@ -414,7 +414,7 @@ const DashboardLayout = ({ children }) => {
 
                                         <option value="ADMIN">Admin</option>
                                         <option value="MANAGER">Manager</option>
-                                        <option value="EMPLOYEE">Employee</option>
+                                        <option value="TEAM_MEMBER">Team Member</option>
                                         <option value="CUSTOMER">Customer</option>
                                     </select>
                                 ) : (

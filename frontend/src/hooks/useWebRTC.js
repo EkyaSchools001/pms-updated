@@ -26,20 +26,28 @@ const useWebRTC = () => {
         });
 
         socket.on('call_ended', () => {
-            setCallEnded(true);
             leaveCall();
-            window.location.reload(); // Simple cleanup for MVP
         });
 
         return () => {
             socket.off('call_user');
             socket.off('call_ended');
+            socket.off('call_accepted');
         };
     }, []);
 
     const enableStream = async (video = true, audio = true) => {
         try {
-            const currentStream = await navigator.mediaDevices.getUserMedia({ video, audio });
+            // Stop any existing tracks before starting a new stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            const currentStream = await navigator.mediaDevices.getUserMedia({
+                video: video ? { width: 640, height: 480 } : false,
+                audio
+            });
+
             setStream(currentStream);
             if (myVideo.current) {
                 myVideo.current.srcObject = currentStream;
@@ -47,6 +55,7 @@ const useWebRTC = () => {
             return currentStream;
         } catch (error) {
             console.error('Error accessing media devices:', error);
+            alert('Could not access camera/microphone. Please check permissions.');
         }
     };
 
@@ -63,6 +72,7 @@ const useWebRTC = () => {
         peer.on('stream', (currentStream) => {
             if (userVideo.current) {
                 userVideo.current.srcObject = currentStream;
+                userVideo.current.play().catch(e => console.error("Error playing user video:", e));
             }
         });
 
@@ -88,6 +98,7 @@ const useWebRTC = () => {
         peer.on('stream', (currentStream) => {
             if (userVideo.current) {
                 userVideo.current.srcObject = currentStream;
+                userVideo.current.play().catch(e => console.error("Error playing user video:", e));
             }
         });
 
@@ -99,14 +110,54 @@ const useWebRTC = () => {
         connectionRef.current = peer;
     };
 
+    const [isAudioMuted, setIsAudioMuted] = useState(false);
+    const [isVideoOff, setIsVideoOff] = useState(false);
+
+    const toggleAudio = () => {
+        if (stream) {
+            const audioTrack = stream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                setIsAudioMuted(!audioTrack.enabled);
+            }
+        }
+    };
+
+    const toggleVideo = () => {
+        if (stream) {
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                setIsVideoOff(!videoTrack.enabled);
+            }
+        }
+    };
+
     const leaveCall = () => {
         setCallEnded(true);
+        setIsCalling(false);
+
+        const socket = getSocket();
+        if (socket && call.from) {
+            socket.emit('end_call', { to: call.from });
+        }
+
         if (connectionRef.current) {
             connectionRef.current.destroy();
         }
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
+
+        setStream(null);
+        setCallAccepted(false);
+        setCall({});
+
+        // Reset video sources
+        if (myVideo.current) myVideo.current.srcObject = null;
+        if (userVideo.current) userVideo.current.srcObject = null;
+
+        setTimeout(() => setCallEnded(false), 2000);
     };
 
     return {
@@ -123,7 +174,11 @@ const useWebRTC = () => {
         answerCall,
         leaveCall,
         enableStream,
-        isCalling
+        isCalling,
+        isAudioMuted,
+        isVideoOff,
+        toggleAudio,
+        toggleVideo
     };
 };
 

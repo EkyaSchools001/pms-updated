@@ -18,7 +18,7 @@ const register = async (req, res) => {
                 email,
                 passwordHash,
                 fullName,
-                role: role || 'EMPLOYEE',
+                role: role || 'TEAM_MEMBER',
             },
         });
 
@@ -27,7 +27,13 @@ const register = async (req, res) => {
         res.status(201).json({
             message: 'User registered successfully',
             token,
-            user: { id: user.id, email: user.email, role: user.role, fullName: user.fullName },
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                fullName: user.fullName,
+                department: user.department
+            },
         });
     } catch (error) {
         console.error('Registration Error:', error);
@@ -55,7 +61,13 @@ const login = async (req, res) => {
         res.json({
             message: 'Login successful',
             token,
-            user: { id: user.id, email: user.email, role: user.role, fullName: user.fullName },
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                fullName: user.fullName,
+                department: user.department
+            },
         });
     } catch (error) {
         console.error('Login Error:', error);
@@ -63,4 +75,20 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const getMe = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { id: true, email: true, role: true, fullName: true, department: true }
+        });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = {
+    register,
+    login,
+    getMe
+};

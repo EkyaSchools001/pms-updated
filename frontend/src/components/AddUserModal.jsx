@@ -10,7 +10,7 @@ const AddUserModal = ({ onClose, onSuccess, allUsers }) => {
         fullName: '',
         email: '',
         password: '',
-        role: 'EMPLOYEE',
+        role: 'TEAM_MEMBER',
         department: '',
         managerId: '',
         dateOfBirth: ''
@@ -112,7 +112,7 @@ const AddUserModal = ({ onClose, onSuccess, allUsers }) => {
                                 value={formData.role}
                                 onChange={e => setFormData({ ...formData, role: e.target.value })}
                             >
-                                <option value="EMPLOYEE">Employee</option>
+                                <option value="TEAM_MEMBER">Team Member</option>
                                 <option value="MANAGER">Manager</option>
                                 <option value="ADMIN">Admin</option>
                                 <option value="CUSTOMER">Customer</option>

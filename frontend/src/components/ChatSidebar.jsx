@@ -223,7 +223,7 @@ const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) =
                                 <p className="text-center text-gray-500 py-4">No contacts available</p>
                             ) : (
                                 <div className="space-y-4">
-                                    {['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'].map(role => {
+                                    {['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'].map(role => {
                                         const roleUsers = users.filter(u => u.role === role);
                                         if (roleUsers.length === 0) return null;
                                         return (

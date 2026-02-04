@@ -11,7 +11,7 @@ const Reports = () => {
     const [users, setUsers] = useState([]);
     const [timeLogs, setTimeLogs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+
     const [viewMode, setViewMode] = useState('DASHBOARD'); // DASHBOARD, GANTT, LOGS
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -32,7 +32,7 @@ const Reports = () => {
     const fetchReports = async () => {
         try {
             setLoading(true);
-            setError(null);
+
             const [projectsRes, usersRes, logsRes] = await Promise.all([
                 api.get('projects'),
                 api.get('users'),
@@ -43,7 +43,7 @@ const Reports = () => {
             setTimeLogs(logsRes.data);
         } catch (error) {
             console.error('Failed to fetch reports', error);
-            setError(error.response?.data?.message || 'Failed to load reports. Please try again.');
+            // setError(error.response?.data?.message || 'Failed to load reports. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -56,7 +56,7 @@ const Reports = () => {
             setShowTaskModal(false);
             fetchReports();
             setNewTask({ title: '', description: '', priority: 'MEDIUM', startDate: '', dueDate: '', assigneeIds: [] });
-        } catch (error) {
+        } catch {
             alert('Failed to create task');
         }
     };
@@ -358,7 +358,7 @@ const GanttChartView = ({ projects, user, onRefresh, onAddTask }) => {
             await api.put(`tasks/${editingTask.id}`, editData);
             setEditingTask(null);
             onRefresh();
-        } catch (error) {
+        } catch {
             alert('Failed to update task');
         }
     };

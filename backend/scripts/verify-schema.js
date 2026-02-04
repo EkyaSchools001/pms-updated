@@ -29,7 +29,7 @@ async function main() {
                 email: `emp1-${Date.now()}@test.com`,
                 passwordHash: 'hash',
                 fullName: 'Employee One',
-                role: 'EMPLOYEE',
+                role: 'TEAM_MEMBER',
             },
         });
 
@@ -38,7 +38,7 @@ async function main() {
                 email: `emp2-${Date.now()}@test.com`,
                 passwordHash: 'hash',
                 fullName: 'Employee Two',
-                role: 'EMPLOYEE',
+                role: 'TEAM_MEMBER',
             },
         });
 

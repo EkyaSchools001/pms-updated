@@ -14,7 +14,7 @@ datasource db {
 enum Role {
   ADMIN
   MANAGER
-  EMPLOYEE
+  TEAM_MEMBER
   CUSTOMER
 }
 
@@ -88,7 +88,7 @@ model User {
   email        String   @unique
   passwordHash String
   fullName     String
-  role         Role     @default(EMPLOYEE)
+  role         Role     @default(TEAM_MEMBER)
   department   String?  // New: Organization unit
   dateOfBirth  DateTime? // New: Birthday
   profilePicture String? // URL to profile picture
@@ -127,6 +127,7 @@ model User {
   ticketComments    TicketComment[] @relation("CommentAuthor")
 
   // Google Integration
+  googleId           String?  @unique
   googleAccessToken  String?
   googleRefreshToken String?
   googleEmail        String?
@@ -276,13 +277,14 @@ model Ticket {
   priority    TaskPriority @default(MEDIUM)
   campus      String?      // New: Campus location
   category    String?      // New: Ticket category (IT, Facilities, etc.)
+  assignedDepartment String? // New: Department assignment for ticket resolution
   slaDeadline DateTime?    // New: SLA deadline
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
   // Foreign Keys
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
 
   reporterId String
   reporter   User   @relation("TicketReporter", fields: [reporterId], references: [id])

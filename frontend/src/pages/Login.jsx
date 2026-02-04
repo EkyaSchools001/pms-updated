@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { LayoutDashboard, ArrowRight, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
@@ -8,7 +9,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, googleLogin } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -27,6 +28,22 @@ const Login = () => {
             setError(result.message);
         }
 
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        setIsLoading(true);
+        const result = await googleLogin(credentialResponse.credential);
+        setIsLoading(false);
+        if (result.success) {
+            navigate('/dashboard');
+        } else {
+            setError(result.message);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError('Google sign-in failed. Please try again.');
     };
 
     return (
@@ -100,6 +117,30 @@ const Login = () => {
                         {!isLoading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
                     </button>
                 </form>
+
+                {/* Divider */}
+                <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
+                    </div>
+                </div>
+
+                {/* Google Sign-In Button */}
+                <div className="flex justify-center">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        useOneTap
+                        theme="outline"
+                        size="large"
+                        text="signin_with"
+                        shape="rectangular"
+                        width="100%"
+                    />
+                </div>
 
             </div>
         </div>

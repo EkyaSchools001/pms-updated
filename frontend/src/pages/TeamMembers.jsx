@@ -56,7 +56,7 @@ const TeamMembers = () => {
         switch (role) {
             case 'ADMIN': return 'bg-purple-50 text-purple-700 border-purple-100';
             case 'MANAGER': return 'bg-blue-50 text-blue-700 border-blue-100';
-            case 'EMPLOYEE': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+            case 'TEAM_MEMBER': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
             case 'CUSTOMER': return 'bg-amber-50 text-amber-700 border-amber-100';
             default: return 'bg-gray-50 text-gray-700 border-gray-100';
         }
@@ -67,9 +67,13 @@ const TeamMembers = () => {
     };
 
     const filteredUsers = users.filter(user => {
-        const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.role.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+            user.fullName.toLowerCase().includes(searchLower) ||
+            user.email.toLowerCase().includes(searchLower) ||
+            user.role.toLowerCase().includes(searchLower) ||
+            (user.department && user.department.toLowerCase().includes(searchLower)) ||
+            (user.manager?.fullName && user.manager.fullName.toLowerCase().includes(searchLower));
 
         const matchesRole = selectedRole === 'ALL' || user.role === selectedRole;
 
@@ -79,9 +83,16 @@ const TeamMembers = () => {
     const roleStats = {
         ADMIN: users.filter(u => u.role === 'ADMIN').length,
         MANAGER: users.filter(u => u.role === 'MANAGER').length,
-        EMPLOYEE: users.filter(u => u.role === 'EMPLOYEE').length,
+        TEAM_MEMBER: users.filter(u => u.role === 'TEAM_MEMBER').length,
         CUSTOMER: users.filter(u => u.role === 'CUSTOMER').length,
     };
+
+    const statCards = [
+        { label: 'Admins', count: roleStats.ADMIN, icon: Users, color: 'purple' },
+        { label: 'Managers', count: roleStats.MANAGER, icon: Briefcase, color: 'blue' },
+        { label: 'Team Members', count: roleStats.TEAM_MEMBER, icon: Users, color: 'emerald' },
+        { label: 'Customers', count: roleStats.CUSTOMER, icon: Users, color: 'amber' }
+    ];
 
     if (loading) {
         return (
@@ -140,7 +151,7 @@ const TeamMembers = () => {
                     <p className="text-[var(--text-secondary)] text-lg">Manage departments, hierarchy, and roles.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-sm text-[var(--text-secondary)] font-medium mr-2">Total: {users.length} members</span>
+                    <span className="text-sm text-[var(--text-secondary)] font-medium mr-2">Showing {filteredUsers.length} of {users.length} members</span>
                     {currentUser?.role === 'ADMIN' && (
                         <button
                             onClick={() => setShowAddModal(true)}
@@ -155,24 +166,27 @@ const TeamMembers = () => {
 
             {/* Role Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[
-                    { label: 'Admins', count: roleStats.ADMIN, icon: Users, color: 'purple' },
-                    { label: 'Managers', count: roleStats.MANAGER, icon: Briefcase, color: 'blue' },
-                    { label: 'Employees', count: roleStats.EMPLOYEE, icon: Users, color: 'emerald' },
-                    { label: 'Customers', count: roleStats.CUSTOMER, icon: Users, color: 'amber' }
-                ].map((stat, i) => (
-                    <div key={i} className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] shadow-sm">
-                        <div className="flex items-center gap-4">
-                            <div className={`p-3 bg-${stat.color}-50 text-${stat.color}-600 rounded-xl`}>
-                                <stat.icon size={24} />
-                            </div>
-                            <div>
-                                <p className="text-sm text-[var(--text-secondary)] font-medium">{stat.label}</p>
-                                <p className="text-2xl font-bold text-[var(--text-primary)]">{stat.count}</p>
+                {statCards.map((stat, i) => {
+                    const colorClasses = {
+                        purple: 'bg-purple-50 text-purple-600',
+                        blue: 'bg-blue-50 text-blue-600',
+                        emerald: 'bg-emerald-50 text-emerald-600',
+                        amber: 'bg-amber-50 text-amber-600'
+                    };
+                    return (
+                        <div key={i} className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-3 rounded-xl ${colorClasses[stat.color]}`}>
+                                    <stat.icon size={24} />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-[var(--text-secondary)] font-medium">{stat.label}</p>
+                                    <p className="text-2xl font-bold text-[var(--text-primary)]">{stat.count}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Toolbar */}
@@ -199,7 +213,7 @@ const TeamMembers = () => {
                         <div className="absolute right-0 mt-2 w-56 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--border-color)] z-50 overflow-hidden">
                             <div className="p-2 space-y-1">
                                 <p className="px-3 py-2 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Filter by Role</p>
-                                {['ALL', 'ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'].map(r => (
+                                {['ALL', 'ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'].map(r => (
                                     <button
                                         key={r}
                                         onClick={() => { setSelectedRole(r); setShowFilterDropdown(false); }}
@@ -243,7 +257,7 @@ const TeamMembers = () => {
                                                 <div>
                                                     <h3 className="font-bold text-[var(--text-primary)] leading-tight">{user.fullName}</h3>
                                                     <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold border ${getRoleColor(user.role)}`}>
-                                                        {user.role}
+                                                        {user.role.replace('_', ' ')}
                                                     </span>
                                                 </div>
                                             </div>

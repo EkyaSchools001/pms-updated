@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-
+const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const { hashPassword } = require('../utils/password');
-
-const prisma = new PrismaClient();
 
 router.use(authenticate);
 
@@ -34,7 +31,7 @@ router.post('/', authorize(['ADMIN']), async (req, res) => {
                 fullName: fullName.trim(),
                 email: email.trim(),
                 passwordHash: hashedPassword,
-                role: role || 'EMPLOYEE',
+                role: role || 'TEAM_MEMBER',
                 department: department || null,
                 managerId: managerId || null,
                 dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null

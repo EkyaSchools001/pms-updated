@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Calendar as CalendarIcon, User, CheckCircle, Clock, MoreHorizontal, AlertCircle, ArrowUpRight, ChevronRight, LayoutGrid, List, Ticket, BarChart3, TrendingUp, Users, Edit2, Save } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, User, CheckCircle, Clock, MoreHorizontal, AlertCircle, ArrowUpRight, ChevronRight, LayoutGrid, List, Ticket, BarChart3, TrendingUp, Users, Edit2, Save, IndianRupee } from 'lucide-react';
 
 import clsx from 'clsx';
 import { format, eachDayOfInterval, isSameDay, addDays, startOfWeek, differenceInDays } from 'date-fns';
@@ -10,7 +10,7 @@ import { format, eachDayOfInterval, isSameDay, addDays, startOfWeek, differenceI
 const ProjectDetails = () => {
     const { user } = useAuth();
     const { id } = useParams();
-    const navigate = useNavigate();
+
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showTaskModal, setShowTaskModal] = useState(false);
@@ -25,11 +25,7 @@ const ProjectDetails = () => {
     });
     const [members, setMembers] = useState([]);
 
-    useEffect(() => {
-        fetchProjectDetails();
-    }, [id]);
-
-    const fetchProjectDetails = async () => {
+    const fetchProjectDetails = useCallback(async () => {
         try {
             const { data } = await api.get(`projects/${id}`);
             setProject(data);
@@ -39,7 +35,11 @@ const ProjectDetails = () => {
             console.error('Failed to fetch project details', error);
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        fetchProjectDetails();
+    }, [id, fetchProjectDetails]);
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
@@ -48,7 +48,7 @@ const ProjectDetails = () => {
             setShowTaskModal(false);
             fetchProjectDetails();
             setNewTask({ title: '', description: '', priority: 'MEDIUM', startDate: '', dueDate: '', assigneeIds: [] });
-        } catch (error) {
+        } catch {
             alert('Failed to create task');
         }
     };
@@ -57,7 +57,7 @@ const ProjectDetails = () => {
         try {
             await api.patch(`tasks/${taskId}/status`, { status: newStatus });
             fetchProjectDetails();
-        } catch (error) {
+        } catch {
             alert('Failed to update task status');
         }
     };
@@ -115,8 +115,8 @@ const ProjectDetails = () => {
                                     <span className="text-sm font-bold text-gray-700">{format(new Date(project.endDate), 'MMM dd, yyyy')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
-                                    <CheckCircle size={16} className="text-emerald-500" />
-                                    <span className="text-sm font-bold text-gray-700">${project.budget.toLocaleString()}</span>
+                                    <IndianRupee size={16} className="text-primary" />
+                                    <span className="text-sm font-bold text-gray-700">₹{project.budget.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -260,7 +260,7 @@ const TimelineView = ({ tasks, project, user, onRefresh, onAddTask }) => {
             await api.put(`tasks/${editingTask.id}`, editData);
             setEditingTask(null);
             onRefresh();
-        } catch (error) {
+        } catch {
             alert('Failed to update task');
         }
     };

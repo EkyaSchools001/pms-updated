@@ -8,7 +8,7 @@ const Register = () => {
         fullName: '',
         email: '',
         password: '',
-        role: 'EMPLOYEE'
+        role: 'TEAM_MEMBER'
     });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -115,7 +115,7 @@ const Register = () => {
                                 value={formData.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                             >
-                                <option value="EMPLOYEE">Employee</option>
+                                <option value="TEAM_MEMBER">Team Member</option>
                                 <option value="MANAGER">Manager</option>
                                 <option value="ADMIN">Admin</option>
                                 <option value="CUSTOMER">Customer</option>

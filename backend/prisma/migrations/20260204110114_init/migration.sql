@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER');
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER');
 
 -- CreateEnum
 CREATE TYPE "ProjectStatus" AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD');
@@ -43,7 +43,7 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "fullName" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'EMPLOYEE',
+    "role" "Role" NOT NULL DEFAULT 'TEAM_MEMBER',
     "department" TEXT,
     "dateOfBirth" TIMESTAMP(3),
     "profilePicture" TEXT,
@@ -51,6 +51,7 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "managerId" TEXT,
     "campusAccess" TEXT,
+    "googleId" TEXT,
     "googleAccessToken" TEXT,
     "googleRefreshToken" TEXT,
     "googleEmail" TEXT,
@@ -164,10 +165,11 @@ CREATE TABLE "Ticket" (
     "priority" "TaskPriority" NOT NULL DEFAULT 'MEDIUM',
     "campus" TEXT,
     "category" TEXT,
+    "assignedDepartment" TEXT,
     "slaDeadline" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "projectId" TEXT NOT NULL,
+    "projectId" TEXT,
     "reporterId" TEXT NOT NULL,
     "assigneeId" TEXT,
     "lastReminderSentAt" TIMESTAMP(3),
@@ -284,6 +286,7 @@ CREATE TABLE "MeetingParticipant" (
 CREATE TABLE "MeetingRoom" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'MEETING',
     "capacity" INTEGER NOT NULL,
     "location" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -362,6 +365,9 @@ CREATE TABLE "_TaskAssignees" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "InventoryItem_sku_key" ON "InventoryItem"("sku");
 
 -- CreateIndex
@@ -416,7 +422,7 @@ ALTER TABLE "ProjectInventory" ADD CONSTRAINT "ProjectInventory_projectId_fkey" 
 ALTER TABLE "ProjectInventory" ADD CONSTRAINT "ProjectInventory_inventoryItemId_fkey" FOREIGN KEY ("inventoryItemId") REFERENCES "InventoryItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_reporterId_fkey" FOREIGN KEY ("reporterId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

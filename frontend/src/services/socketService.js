@@ -31,6 +31,12 @@ export const subscribeToMessages = (cb) => {
     });
 };
 
+export const subscribeToMessageUpdates = (onEdit, onDelete) => {
+    if (!socket) return;
+    socket.on('message_edited', (message) => onEdit(message));
+    socket.on('message_deleted', (data) => onDelete(data));
+};
+
 export const sendMessage = () => {
     if (socket) {
         // We are sending via API, but we could also emit here if we wanted optimistic UI

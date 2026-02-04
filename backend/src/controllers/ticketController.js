@@ -7,17 +7,13 @@ const { createNotification } = require('./notificationController');
  */
 const createTicket = async (req, res) => {
     try {
-        let { title, description, priority, projectId, assigneeId, campus, category } = req.body;
+        let { title, description, priority, projectId, assigneeId, campus, category, assignedDepartment } = req.body;
         const reporterId = req.user.id;
 
         // Ensure a projectId exists (for chatbot compatibility)
         if (!projectId) {
             const firstProject = await prisma.project.findFirst();
-            projectId = firstProject?.id;
-        }
-
-        if (!projectId) {
-            return res.status(400).json({ message: 'No project found to associate ticket with.' });
+            projectId = firstProject?.id || null; // Allow null if no project exists
         }
 
         // Set SLA Deadline based on priority
@@ -37,13 +33,14 @@ const createTicket = async (req, res) => {
                 assigneeId,
                 campus,
                 category,
+                assignedDepartment,
                 slaDeadline,
                 lastReminderSentAt: new Date()
             },
             include: {
                 assignee: true,
                 reporter: true,
-                project: { select: { name: true } }
+                ...(projectId && { project: { select: { name: true } } })
             }
         });
 
@@ -104,11 +101,13 @@ const getTickets = async (req, res) => {
                 };
             }
         } else {
-            // Employee/Customer see their own
+            // Employee/Customer see their own tickets AND tickets assigned to their department
+            const userDepartment = req.user.department;
             where = {
                 OR: [
                     { reporterId: userId },
-                    { assigneeId: userId }
+                    { assigneeId: userId },
+                    ...(userDepartment ? [{ assignedDepartment: userDepartment }] : [])
                 ]
             };
         }
@@ -140,15 +139,41 @@ const getTickets = async (req, res) => {
 const updateTicket = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, priority, description, assigneeId } = req.body;
+        const { status, priority, description, assigneeId, assignedDepartment } = req.body;
 
         const ticket = await prisma.ticket.update({
             where: { id },
-            data: { status, priority, description, assigneeId },
+            data: { status, priority, description, assigneeId, assignedDepartment },
             include: { assignee: true, reporter: true, project: true }
         });
 
+        // Notify department employees if department is assigned
+        if (assignedDepartment) {
+            const departmentEmployees = await prisma.user.findMany({
+                where: {
+                    department: assignedDepartment,
+                    role: { in: ['TEAM_MEMBER', 'MANAGER'] }
+                }
+            });
+
+            departmentEmployees.forEach(emp => {
+                createNotification(
+                    emp.id,
+                    'TICKET_ASSIGNED',
+                    'Ticket Assigned to Your Department',
+                    `A ${priority || ticket.priority} priority ticket has been assigned to ${assignedDepartment} department: "${ticket.title}"`,
+                    `/manager-dashboard`
+                );
+            });
+        }
+
         if (assigneeId) {
+            // Restriction: Only Admin can assign to Managers
+            const newAssignee = await prisma.user.findUnique({ where: { id: assigneeId } });
+            if (newAssignee && newAssignee.role === 'MANAGER' && req.user.role !== 'ADMIN') {
+                return res.status(403).json({ message: 'Only Administrators can assign tickets to Managers.' });
+            }
+
             createNotification(
                 assigneeId,
                 'TICKET_ASSIGNED',
@@ -185,7 +210,14 @@ const updateTicket = async (req, res) => {
                 entityType: 'TICKET',
                 entityId: id,
                 userId: req.user.id,
-                details: JSON.stringify({ status, priority, assigneeId })
+                details: JSON.stringify({
+                    status: status || ticket.status,
+                    priority: priority || ticket.priority,
+                    assigneeId: assigneeId || ticket.assigneeId,
+                    assignedDepartment: assignedDepartment || ticket.assignedDepartment,
+                    updatedBy: req.user.fullName,
+                    role: req.user.role
+                })
             }
         });
 
@@ -309,10 +341,37 @@ const getTicketLogs = async (req, res) => {
     }
 };
 
+const deleteTicket = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Create Audit Log before deletion
+        await prisma.auditLog.create({
+            data: {
+                action: 'DELETED',
+                entityType: 'TICKET',
+                entityId: id,
+                userId: req.user.id,
+                details: `Ticket ${id} deleted by Admin`
+            }
+        });
+
+        await prisma.ticket.delete({
+            where: { id }
+        });
+
+        res.json({ message: 'Ticket deleted successfully' });
+    } catch (error) {
+        console.error('Delete Ticket Error:', error);
+        res.status(500).json({ message: 'Server error deleting ticket' });
+    }
+};
+
 module.exports = {
     createTicket,
     getTickets,
     updateTicket,
+    deleteTicket,
     addTicketComment,
     getTicketStatus,
     getRecentTickets,

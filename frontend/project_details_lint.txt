@@ -1,0 +1,39 @@
+
+C:\games\PMS\pms-updated\frontend\src\pages\ProjectDetails.jsx
+   13:11  error    'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+   29:9   error    Error: Cannot access variable before it is declared
+
+`fetchProjectDetails` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  27 |
+  28 |     useEffect(() => {
+> 29 |         fetchProjectDetails();
+     |         ^^^^^^^^^^^^^^^^^^^ `fetchProjectDetails` accessed before it is declared
+  30 |     }, [id]);
+  31 |
+  32 |     const fetchProjectDetails = async () => {
+
+  30 |     }, [id]);
+  31 |
+> 32 |     const fetchProjectDetails = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |         try {
+     | ^^^^^^^^^^^^^
+> 34 |             const { data } = await api.get(`projects/${id}`);
+     …
+     | ^^^^^^^^^^^^^
+> 41 |         }
+     | ^^^^^^^^^^^^^
+> 42 |     };
+     | ^^^^^^^ `fetchProjectDetails` is declared here
+  43 |
+  44 |     const handleCreateTask = async (e) => {
+  45 |         e.preventDefault();  react-hooks/immutability
+   30:8   warning  React Hook useEffect has a missing dependency: 'fetchProjectDetails'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+   51:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+   60:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+  184:45  error    'Icon' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  263:18  error    'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+
+✖ 7 problems (6 errors, 1 warning)
+

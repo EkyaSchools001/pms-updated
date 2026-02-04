@@ -6,9 +6,10 @@ const {
     addTicketComment,
     getTicketStatus,
     getRecentTickets,
-    getTicketLogs
+    getTicketLogs,
+    deleteTicket
 } = require('../controllers/ticketController');
-const { authenticate } = require('../middlewares/authMiddleware');
+const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.get('/recent', getRecentTickets);
 router.get('/:id/status', getTicketStatus);
 router.get('/:id/logs', getTicketLogs);
 router.put('/:id', updateTicket);
+router.delete('/:id', authorize(['ADMIN']), deleteTicket);
 router.post('/:id/comments', addTicketComment);
 
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -77,11 +77,7 @@ const CalendarPage = () => {
         }
     };
 
-    useEffect(() => {
-        fetchEvents();
-    }, [calendarRange]);
-
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         if (!calendarRange.start) return;
         try {
             const response = await api.get('calendar/events', {
@@ -94,7 +90,11 @@ const CalendarPage = () => {
         } catch (error) {
             console.error('Failed to fetch calendar events:', error);
         }
-    };
+    }, [calendarRange]);
+
+    useEffect(() => {
+        fetchEvents();
+    }, [fetchEvents]);
 
     const handleDatesSet = (dateInfo) => {
         setCalendarRange({

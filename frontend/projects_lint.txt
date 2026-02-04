@@ -1,0 +1,34 @@
+
+C:\games\PMS\pms-updated\frontend\src\pages\Projects.jsx
+  25:9   error  Error: Cannot access variable before it is declared
+
+`fetchData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  23 |
+  24 |     useEffect(() => {
+> 25 |         fetchData();
+     |         ^^^^^^^^^ `fetchData` accessed before it is declared
+  26 |     }, []);
+  27 |
+  28 |     const fetchData = async () => {
+
+  26 |     }, []);
+  27 |
+> 28 |     const fetchData = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |         try {
+     | ^^^^^^^^^^^^^
+> 30 |             setLoading(true);
+     …
+     | ^^^^^^^^^^^^^
+> 41 |         }
+     | ^^^^^^^^^^^^^
+> 42 |     };
+     | ^^^^^^^ `fetchData` is declared here
+  43 |
+  44 |
+  45 |     const handleSubmit = async (e) => {  react-hooks/immutability
+  60:18  error  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+
+✖ 2 problems (2 errors, 0 warnings)
+

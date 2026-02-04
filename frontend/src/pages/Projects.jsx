@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Calendar, DollarSign, Search, Filter, MoreVertical, TrendingUp, Users, Clock, ArrowRight } from 'lucide-react';
+import { Plus, Calendar, IndianRupee, Search, Filter, MoreVertical, TrendingUp, Users, Clock, ArrowRight } from 'lucide-react';
 
 const Projects = () => {
     const { user } = useAuth();
@@ -21,11 +21,7 @@ const Projects = () => {
     });
 
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [projectsRes, usersRes] = await Promise.all([
@@ -39,7 +35,11 @@ const Projects = () => {
             console.error('Failed to fetch dashboard data', error);
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
 
     const handleSubmit = async (e) => {
@@ -57,7 +57,7 @@ const Projects = () => {
                 managerId: user?.id || '',
                 memberIds: []
             });
-        } catch (error) {
+        } catch {
             alert('Failed to create project');
         }
     };
@@ -159,8 +159,8 @@ const Projects = () => {
                                         <span>{new Date(project.startDate).toLocaleDateString()}</span>
                                     </div>
                                     <div className="flex items-center gap-2 font-medium text-gray-700">
-                                        <DollarSign size={16} className="text-gray-400" />
-                                        <span>${project.budget.toLocaleString()}</span>
+                                        <IndianRupee size={16} className="text-gray-400" />
+                                        <span>₹{project.budget.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -261,7 +261,7 @@ const Projects = () => {
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Budget</label>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-2.5 text-gray-400 font-medium">$</span>
+                                        <span className="absolute left-4 top-2.5 text-gray-400 font-medium">₹</span>
                                         <input
                                             type="number"
                                             className="input-field pl-8 bg-gray-50 focus:bg-white"

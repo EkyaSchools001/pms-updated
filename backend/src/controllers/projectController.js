@@ -74,7 +74,7 @@ const getProjects = async (req, res) => {
 
         if (role === ROLES.MANAGER) {
             where = { managerId: id };
-        } else if (role === ROLES.EMPLOYEE) {
+        } else if (role === ROLES.TEAM_MEMBER) {
             // Employees see projects they are members of
             where = {
                 members: {

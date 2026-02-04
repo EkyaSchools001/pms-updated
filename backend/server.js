@@ -1,9 +1,8 @@
+require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./src/app');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('./src/utils/prisma');
 const PORT = process.env.PORT || 5000;
 
 async function main() {

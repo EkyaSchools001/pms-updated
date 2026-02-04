@@ -22,11 +22,12 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-full border-4 border-gray-100"></div>
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin absolute top-0 left-0"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="relative mb-4">
+          <div className="w-12 h-12 rounded-full border-4 border-gray-200"></div>
+          <div className="w-12 h-12 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin absolute top-0 left-0"></div>
         </div>
+        <p className="text-gray-600 font-medium animate-pulse">Initializing PMS...</p>
       </div>
     );
   }
@@ -43,107 +44,109 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <ThemeProvider>
+        <Router>
 
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/register"
-            element={
-              <PrivateRoute allowedRoles={['ADMIN']}>
-                <Register />
-              </PrivateRoute>
-            }
-          />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/register"
+              element={
+                <PrivateRoute allowedRoles={['ADMIN']}>
+                  <Register />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/projects"
-            element={
-              <PrivateRoute>
-                <Projects />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/projects"
+              element={
+                <PrivateRoute>
+                  <Projects />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/projects/:id"
-            element={
-              <PrivateRoute>
-                <ProjectDetails />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/projects/:id"
+              element={
+                <PrivateRoute>
+                  <ProjectDetails />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/tasks"
-            element={
-              <PrivateRoute>
-                <Tasks />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/tasks"
+              element={
+                <PrivateRoute>
+                  <Tasks />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/team"
-            element={
-              <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
-                <TeamMembers />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/team"
+              element={
+                <PrivateRoute allowedRoles={['ADMIN', 'MANAGER', 'TEAM_MEMBER']}>
+                  <TeamMembers />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/chat"
-            element={
-              <PrivateRoute>
-                <ChatPage />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/chat"
+              element={
+                <PrivateRoute>
+                  <ChatPage />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/calendar"
-            element={
-              <PrivateRoute>
-                <CalendarPage />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/calendar"
+              element={
+                <PrivateRoute>
+                  <CalendarPage />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/reports"
-            element={
-              <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
-                <Reports />
-              </PrivateRoute>
-            }
-          />
-
-
-
-          <Route
-            path="/manager-dashboard"
-            element={
-              <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
-                <ManagerDashboard />
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/reports"
+              element={
+                <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                  <Reports />
+                </PrivateRoute>
+              }
+            />
 
 
 
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Router>
+            <Route
+              path="/manager-dashboard"
+              element={
+                <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                  <ManagerDashboard />
+                </PrivateRoute>
+              }
+            />
+
+
+
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
     </AuthProvider >
 
 

@@ -61,7 +61,8 @@ async function seed() {
                 email: 'john@test.com',
                 passwordHash: password,
                 fullName: 'John Smith',
-                role: 'EMPLOYEE',
+                role: 'TEAM_MEMBER',
+                department: 'IT Support',
             },
         });
         console.log('✅ Employee 1 created: john@test.com / password123');
@@ -71,7 +72,8 @@ async function seed() {
                 email: 'emily@test.com',
                 passwordHash: password,
                 fullName: 'Emily Chen',
-                role: 'EMPLOYEE',
+                role: 'TEAM_MEMBER',
+                department: 'IT Support',
             },
         });
         console.log('✅ Employee 2 created: emily@test.com / password123');
@@ -81,7 +83,8 @@ async function seed() {
                 email: 'michael@test.com',
                 passwordHash: password,
                 fullName: 'Michael Brown',
-                role: 'EMPLOYEE',
+                role: 'TEAM_MEMBER',
+                department: 'Facilities',
             },
         });
         console.log('✅ Employee 3 created: michael@test.com / password123');

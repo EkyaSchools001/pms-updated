@@ -1,16 +1,30 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, AlertCircle, Search, Filter, ArrowUpRight, CheckSquare } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, Search, Filter, ArrowUpRight, CheckSquare, Plus } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
 import clsx from 'clsx';
 import { format } from 'date-fns';
 
 const Tasks = () => {
     const { user } = useAuth();
+
     const [tasks, setTasks] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [showModal, setShowModal] = useState(false);
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        priority: 'MEDIUM',
+        startDate: '',
+        dueDate: '',
+        projectId: '',
+        assigneeIds: []
+    });
 
     useEffect(() => {
         fetchTasks();
@@ -19,8 +33,14 @@ const Tasks = () => {
     const fetchTasks = async () => {
         try {
             setLoading(true);
-            const { data } = await api.get('tasks/my-tasks');
-            setTasks(data);
+            const [tasksRes, projectsRes, usersRes] = await Promise.all([
+                api.get('tasks/my-tasks'),
+                api.get('projects'),
+                api.get('users')
+            ]);
+            setTasks(tasksRes.data);
+            setProjects(projectsRes.data);
+            setUsers(usersRes.data);
         } catch (error) {
             console.error('Failed to fetch tasks', error);
         } finally {
@@ -36,6 +56,27 @@ const Tasks = () => {
         } catch (error) {
             console.error('Failed to update status', error);
             alert('Failed to update status');
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('tasks', formData);
+            setShowModal(false);
+            fetchTasks();
+            setFormData({
+                title: '',
+                description: '',
+                priority: 'MEDIUM',
+                startDate: '',
+                dueDate: '',
+                projectId: '',
+                assigneeIds: []
+            });
+        } catch (error) {
+            console.error('Failed to create task', error);
+            alert('Failed to create task. Please try again.');
         }
     };
 
@@ -89,6 +130,15 @@ const Tasks = () => {
                     <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">My Sandbox</h1>
                     <p className="text-gray-500 text-lg font-medium">Clear your desk. Execute your assigned tasks.</p>
                 </div>
+                {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="btn btn-primary shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
+                    >
+                        <Plus size={20} />
+                        Add Task
+                    </button>
+                )}
             </div>
 
             {/* Performance Widgets */}
@@ -205,6 +255,125 @@ const Tasks = () => {
                     )}
                 </div>
             </div>
+
+            {/* Create Task Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all">
+                    <div className="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in duration-300 border border-gray-100 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-8">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">Create New Task</h2>
+                                <p className="text-sm text-gray-500">Add a new task to your project</p>
+                            </div>
+                            <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
+                                <span className="text-2xl leading-none">&times;</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Task Title *</label>
+                                    <input
+                                        required
+                                        className="input-field bg-gray-50 focus:bg-white transition-colors"
+                                        placeholder="e.g. Design landing page mockup"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Description</label>
+                                    <textarea
+                                        className="input-field min-h-[100px] bg-gray-50 focus:bg-white transition-colors resize-none"
+                                        placeholder="Describe the task requirements and deliverables..."
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Project *</label>
+                                    <select
+                                        required
+                                        className="input-field bg-gray-50 focus:bg-white transition-colors"
+                                        value={formData.projectId}
+                                        onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+                                    >
+                                        <option value="">Select a project</option>
+                                        {projects.map(p => (
+                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Priority</label>
+                                        <select
+                                            className="input-field bg-gray-50 focus:bg-white transition-colors"
+                                            value={formData.priority}
+                                            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                                        >
+                                            <option value="LOW">Low</option>
+                                            <option value="MEDIUM">Medium</option>
+                                            <option value="HIGH">High</option>
+                                            <option value="CRITICAL">Critical</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Start Date</label>
+                                        <input
+                                            type="date"
+                                            className="input-field bg-gray-50 focus:bg-white"
+                                            value={formData.startDate}
+                                            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Due Date</label>
+                                        <input
+                                            type="date"
+                                            className="input-field bg-gray-50 focus:bg-white"
+                                            value={formData.dueDate}
+                                            onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Assign To</label>
+                                    <select
+                                        multiple
+                                        className="input-field bg-gray-50 focus:bg-white transition-colors h-32"
+                                        value={formData.assigneeIds}
+                                        onChange={(e) => setFormData({ ...formData, assigneeIds: Array.from(e.target.selectedOptions, o => o.value) })}
+                                    >
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.id}>{u.fullName} ({u.role})</option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[10px] text-gray-400 mt-1 ml-1 italic">Hold Ctrl (Cmd) to select multiple assignees</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 pt-6 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowModal(false)}
+                                    className="flex-1 btn btn-secondary py-3"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="flex-1 btn btn-primary py-3 shadow-lg shadow-primary/25 hover:shadow-primary/40">
+                                    Create Task
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

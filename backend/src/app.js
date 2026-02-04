@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
@@ -17,7 +16,7 @@ const calendarAuthRoutes = require('./routes/calendarAuthRoutes');
 
 
 
-dotenv.config();
+
 
 const app = express();
 
@@ -69,6 +68,9 @@ app.get('*', (req, res) => {
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
+    const fs = require('fs');
+    const logMessage = `\n[${new Date().toISOString()}] ${err.stack}\n`;
+    fs.appendFileSync('error_log.txt', logMessage);
     console.error(err.stack);
     res.status(500).json({ message: 'Server Error', error: err.message });
 });

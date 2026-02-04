@@ -139,12 +139,16 @@ const FloatingChatbot = () => {
             addMessage(`✅ Ticket created successfully! Your ID is: ${res.data.id.slice(0, 8).toUpperCase()}`, 'bot');
             setTimeout(() => {
                 addMessage('You can track it anytime using the "Check Status" option.', 'bot');
+                addMessage('What would you like to do next?', 'bot', 'restart-menu');
                 setMode('OPTIONS');
                 setTicketForm({ title: '', description: '', campus: '', category: '', priority: 'MEDIUM' });
             }, 1000);
         } catch (err) {
             addMessage('❌ Failed to create ticket. Please try again later or contact IT directly.', 'bot');
-            setMode('OPTIONS');
+            setTimeout(() => {
+                addMessage('Would you like to try again or explore other options?', 'bot', 'restart-menu');
+                setMode('OPTIONS');
+            }, 500);
         }
     };
 
@@ -154,11 +158,17 @@ const FloatingChatbot = () => {
         try {
             const res = await api.get(`tickets/${cleanId}/status`);
             addMessage('Found it! Here are the details:', 'bot', 'ticket-detail', res.data);
+            setTimeout(() => {
+                addMessage('Need anything else?', 'bot', 'restart-menu');
+            }, 500);
         } catch (err) {
             const msg = err.response?.status === 403
                 ? '🔒 You don’t have permission to view this ticket.'
                 : '❌ Ticket not found. Please check the Ticket ID.';
             addMessage(msg, 'bot');
+            setTimeout(() => {
+                addMessage('Would you like to try again?', 'bot', 'restart-menu');
+            }, 500);
         }
         setMode('OPTIONS');
     };
@@ -408,6 +418,18 @@ const FloatingChatbot = () => {
                                                 Last updated {formatDistanceToNow(new Date(m.data.updatedAt))} ago
                                             </div>
                                         </div>
+                                    </div>
+                                )}
+
+                                {m.type === 'restart-menu' && (
+                                    <div className="mt-4">
+                                        <button
+                                            onClick={resetChat}
+                                            className="w-full p-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                                        >
+                                            <ArrowLeft size={16} />
+                                            Restart Menu
+                                        </button>
                                     </div>
                                 )}
                             </div>

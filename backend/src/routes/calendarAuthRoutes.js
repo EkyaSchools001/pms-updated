@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getAuthUrl, getTokens } = require('../services/googleCalendarService');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prisma');
 const jwt = require('jsonwebtoken');
 
 // Middleware to authenticate PMS user
