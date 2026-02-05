@@ -160,7 +160,7 @@ const ProjectDetails = () => {
                                 </div>
                                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
                                     <IndianRupee size={16} className="text-primary" />
-                                    <span className="text-sm font-bold text-gray-700">₹{project.budget.toLocaleString()}</span>
+                                    <span className="text-sm font-bold text-gray-700">{project.budget.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
