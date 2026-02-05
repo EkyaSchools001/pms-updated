@@ -3,6 +3,9 @@ const router = express.Router();
 const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const { hashPassword } = require('../utils/password');
+const upload = require('../middlewares/profileUploadMiddleware');
+const fs = require('fs');
+const path = require('path');
 
 router.use(authenticate);
 
@@ -210,6 +213,60 @@ router.put('/:id', async (req, res) => {
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).json({ message: 'Failed to update user profile' });
+    }
+});
+
+// Upload profile picture
+router.post('/profile-picture', upload.single('profilePicture'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const userId = req.user.id;
+
+        // Get current user to check for old profile picture
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { profilePicture: true }
+        });
+
+        // Delete old profile picture if it exists and is not the default
+        if (user && user.profilePicture) {
+            try {
+                // profilePicture stores something like "/uploads/profiles/filename.jpg"
+                const oldPath = path.join(__dirname, '../..', user.profilePicture);
+                if (fs.existsSync(oldPath)) {
+                    fs.unlinkSync(oldPath);
+                    console.log(`Deleted old profile picture: ${oldPath}`);
+                }
+            } catch (err) {
+                console.warn('Failed to delete old profile picture:', err.message);
+            }
+        }
+
+        // The URL path to store in DB
+        const relativePath = `/uploads/profiles/${req.file.filename}`;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { profilePicture: relativePath },
+            select: {
+                id: true,
+                fullName: true,
+                email: true,
+                profilePicture: true,
+                role: true
+            }
+        });
+
+        res.json({
+            message: 'Profile picture updated successfully',
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Profile picture upload error:', error);
+        res.status(500).json({ message: 'Failed to upload profile picture', error: error.message });
     }
 });
 
