@@ -22,7 +22,7 @@ const Login = () => {
         if (result.success) {
             const userRole = result.user?.role;
             if (userRole === 'MANAGER' || userRole === 'ADMIN') {
-                navigate('/manager-dashboard');
+                navigate('/dashboard');
             } else {
                 navigate('/dashboard');
             }
@@ -52,7 +52,7 @@ const Login = () => {
             if (authResult.success) {
                 const userRole = authResult.user?.role;
                 if (userRole === 'MANAGER' || userRole === 'ADMIN') {
-                    navigate('/manager-dashboard');
+                    navigate('/dashboard');
                 } else {
                     navigate('/dashboard');
                 }
