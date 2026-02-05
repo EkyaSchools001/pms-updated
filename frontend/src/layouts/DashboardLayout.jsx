@@ -7,6 +7,17 @@ import api from '../services/api';
 import FloatingChatbot from '../components/FloatingChatbot';
 import NotificationDropdown from '../components/NotificationDropdown';
 
+// Get API base URL for images
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Helper to get full image URL
+const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    // Remove /api/v1 from API_URL if present to get base URL
+    const baseUrl = API_URL.replace('/api/v1', '');
+    return `${baseUrl}${path}`;
+};
+
 
 
 const DashboardLayout = ({ children }) => {
@@ -101,9 +112,29 @@ const DashboardLayout = ({ children }) => {
                 fullName: editFormData.fullName.trim(),
             };
 
-            // Include profile picture if changed
-            if (profilePicturePreview && profilePicturePreview !== user.profilePicture) {
-                updateData.profilePicture = profilePicturePreview;
+            // Handle Profile Picture Upload
+            if (profilePictureFile) {
+                const formData = new FormData();
+                formData.append('profilePicture', profilePictureFile);
+
+                try {
+                    const uploadResponse = await api.post('users/profile-picture', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
+
+                    // Update the profile picture URL in our update data
+                    // Note: The upload endpoint updates the DB too, but we might want to ensure 
+                    // consistent state or just use the returned URL
+                    updateData.profilePicture = uploadResponse.data.user.profilePicture;
+
+                } catch (uploadError) {
+                    console.error('Failed to upload profile picture:', uploadError);
+                    setError('Failed to upload profile picture. Please try again.');
+                    setIsSubmitting(false);
+                    return;
+                }
             }
 
             // Only Admin and Manager can change roles and email
@@ -117,11 +148,18 @@ const DashboardLayout = ({ children }) => {
                 updateData.email = editFormData.email.trim();
             }
 
-            // Call API to update user profile
+            // Call API to update user profile (other fields)
             const response = await api.put(`users/${user.id}`, updateData);
 
             // Update local storage with new user data
-            const updatedUser = { ...user, ...response.data };
+            // We combine the upload response (if any) and the PUT response
+            const updatedUser = {
+                ...user,
+                ...response.data,
+                // Ensure profilePicture is current if we just uploaded it
+                profilePicture: updateData.profilePicture || response.data.profilePicture || user.profilePicture
+            };
+
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
             // Reload to reflect changes
@@ -182,7 +220,7 @@ const DashboardLayout = ({ children }) => {
 
                                 {user?.profilePicture ? (
                                     <img
-                                        src={user.profilePicture}
+                                        src={getImageUrl(user.profilePicture)}
                                         alt={user.fullName}
                                         className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
                                     />
@@ -209,7 +247,7 @@ const DashboardLayout = ({ children }) => {
                                             <div className="relative">
                                                 {user?.profilePicture ? (
                                                     <img
-                                                        src={user.profilePicture}
+                                                        src={getImageUrl(user.profilePicture)}
                                                         alt={user.fullName}
                                                         className="w-16 h-16 rounded-full object-cover border-4 border-white/30 backdrop-blur-sm"
                                                     />
@@ -343,7 +381,7 @@ const DashboardLayout = ({ children }) => {
                                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--bg-background)] shadow-lg">
                                         {profilePicturePreview ? (
                                             <img
-                                                src={profilePicturePreview}
+                                                src={getImageUrl(profilePicturePreview)}
                                                 alt="Profile Preview"
                                                 className="w-full h-full object-cover"
                                             />
