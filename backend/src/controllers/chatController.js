@@ -12,6 +12,22 @@ exports.createPrivateChat = async (req, res) => {
             return res.status(400).json({ error: 'Target user ID is required' });
         }
 
+        // Role-based restriction: Customers can only chat with Admins and Managers
+        if (req.user.role === 'CUSTOMER') {
+            const targetUser = await prisma.user.findUnique({
+                where: { id: targetUserId },
+                select: { role: true }
+            });
+
+            if (!targetUser) {
+                return res.status(404).json({ error: 'Target user not found' });
+            }
+
+            if (!['ADMIN', 'MANAGER'].includes(targetUser.role)) {
+                return res.status(403).json({ error: 'Customers can only message Support Team (Admins and Managers)' });
+            }
+        }
+
         // Check if chat already exists
         const existingChat = await prisma.chat.findFirst({
             where: {

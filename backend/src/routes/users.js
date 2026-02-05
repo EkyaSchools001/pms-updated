@@ -61,7 +61,20 @@ router.post('/', authorize(['ADMIN']), async (req, res) => {
 // Get all users (for team members page and chat)
 router.get('/', async (req, res) => {
     try {
+        const currentUserRole = req.user.role;
+        let whereClause = {};
+
+        // Role-based visibility: Customers can only see Admins and Managers
+        if (currentUserRole === 'CUSTOMER') {
+            whereClause = {
+                role: {
+                    in: ['ADMIN', 'MANAGER']
+                }
+            };
+        }
+
         const users = await prisma.user.findMany({
+            where: whereClause,
             select: {
                 id: true,
                 email: true,
@@ -94,6 +107,7 @@ router.get('/', async (req, res) => {
         });
         res.json(users);
     } catch (error) {
+        console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Failed to fetch users' });
     }
 });
