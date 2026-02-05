@@ -8,21 +8,41 @@ async function seed() {
 
     try {
         // Clear existing data (optional - comment out if you want to keep existing data)
+        // Clear existing data in correct order (children before parents)
         console.log('🗑️  Clearing existing test data...');
-        await prisma.notification.deleteMany({});
-        await prisma.roomAvailabilitySlot.deleteMany({});
-        await prisma.roomBlockedSlot.deleteMany({});
+        // 1. Chat related
+        await prisma.messageReaction.deleteMany({});
         await prisma.message.deleteMany({});
         await prisma.chatParticipant.deleteMany({});
         await prisma.chat.deleteMany({});
-        await prisma.auditLog.deleteMany({});
+
+        // 2. Ticket related
         await prisma.ticketComment.deleteMany({});
         await prisma.ticket.deleteMany({});
+
+        // 3. Project / Inventory / Finance
+        await prisma.projectInventory.deleteMany({});
+        await prisma.inventoryItem.deleteMany({});
+        await prisma.expense.deleteMany({});
+        await prisma.invoice.deleteMany({});
+
+        // 4. Tasks and TimeLogs
         await prisma.timeLog.deleteMany({});
         await prisma.task.deleteMany({});
-        await prisma.meetingRoom.deleteMany({});
-        await prisma.project.deleteMany({});
+
+        // 5. Meetings related
+        await prisma.meetingParticipant.deleteMany({});
         await prisma.meeting.deleteMany({});
+        await prisma.roomAvailabilitySlot.deleteMany({});
+        await prisma.roomBlockedSlot.deleteMany({});
+        await prisma.meetingRoom.deleteMany({});
+
+        // 6. User and System related
+        await prisma.calendarShare.deleteMany({});
+        await prisma.calendarView.deleteMany({});
+        await prisma.auditLog.deleteMany({});
+        await prisma.notification.deleteMany({});
+        await prisma.project.deleteMany({});
         await prisma.user.deleteMany({
             where: {
                 email: {
