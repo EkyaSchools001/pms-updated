@@ -87,6 +87,79 @@ const sendTicketEmail = async (to, subject, ticketDetails) => {
 };
 
 /**
+ * @desc    Send project assignment email
+ */
+const sendProjectEmail = async (to, projectDetails) => {
+    const { name, description, managerName, role } = projectDetails;
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #6366f1;">🚀 Added to Project: ${name}</h2>
+            <p>Hi there,</p>
+            <p>You have been added to a new project as a <strong>${role || 'Member'}</strong>.</p>
+            
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>📁 Project:</strong> ${name}</p>
+                <p><strong>👤 Manager:</strong> ${managerName}</p>
+                <p><strong>📝 Description:</strong> ${description || 'No description provided'}</p>
+            </div>
+            
+            <p>Please log in to the PMS to view project details and tasks.</p>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #666;">This is an automated notification from your Project Management System.</p>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: '"PMS Projects" <projects@pms.com>',
+            to,
+            subject: `Project Assignment: ${name}`,
+            html
+        });
+        console.log(`Project email sent to ${to}`);
+    } catch (error) {
+        console.error('Failed to send project email:', error);
+    }
+};
+
+/**
+ * @desc    Send chat message notification email
+ */
+const sendChatMessageEmail = async (to, chatDetails) => {
+    const { senderName, content, chatName, isGroup } = chatDetails;
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #10b981;">💬 New Message ${isGroup ? `in ${chatName}` : ''}</h2>
+            <p><strong>${senderName}</strong> sent you a message:</p>
+            
+            <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dcfce7;">
+                <p style="font-style: italic;">"${content.length > 100 ? content.substring(0, 100) + '...' : content}"</p>
+            </div>
+            
+            <p><a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/chat" style="display: inline-block; padding: 10px 20px; background-color: #10b981; color: white; text-decoration: none; border-radius: 5px;">Reply in Chat</a></p>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #666;">This is an automated notification from your Project Management System.</p>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: '"PMS Chat" <chat@pms.com>',
+            to,
+            subject: `New message from ${senderName}`,
+            html
+        });
+        console.log(`Chat notification email sent to ${to}`);
+    } catch (error) {
+        console.error('Failed to send chat email:', error);
+    }
+};
+
+/**
  * @desc    Send time log notification
  */
 const sendTimeLogEmail = async (to, subject, logDetails) => {
@@ -125,10 +198,47 @@ const sendTimeLogEmail = async (to, subject, logDetails) => {
     }
 };
 
+/**
+ * @desc    Send email verification link
+ */
+const sendVerificationEmail = async (to, token) => {
+    const verificationUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/v1/auth/verify-email?token=${token}`;
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #6366f1;">Verify Your Email</h2>
+            <p>Welcome to PMS! Please click the button below to verify your email address and activate your account.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Verify Email Address</a>
+            </div>
+            
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #666;">This link will expire in 24 hours.</p>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: '"PMS Auth" <auth@pms.com>',
+            to,
+            subject: 'Verify your email address',
+            html
+        });
+        console.log(`Verification email sent to ${to}`);
+    } catch (error) {
+        console.error('Failed to send verification email:', error);
+    }
+};
+
 module.exports = {
     sendMeetingEmail,
     sendTicketEmail,
-    sendTimeLogEmail
+    sendProjectEmail,
+    sendChatMessageEmail,
+    sendTimeLogEmail,
+    sendVerificationEmail
 };
-
-

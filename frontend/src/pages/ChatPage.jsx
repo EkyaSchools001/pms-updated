@@ -9,15 +9,7 @@ const ChatPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialChatId = searchParams.get('chatId');
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            initiateSocketConnection(token);
-        }
-        return () => {
-            disconnectSocket();
-        };
-    }, []);
+    // Socket is now managed globally in AuthProvider
 
     // Clear search param and local selection
     const handleBack = () => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Plus, MessageSquare, X, Search, MoreVertical } from 'lucide-react';
+import { Plus, MessageSquare, X, Search, MoreVertical, CheckCheck } from 'lucide-react';
+import { getSocket, subscribeToChatFeatures } from '../services/socketService';
 
 const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) => {
     const [chats, setChats] = useState([]);
@@ -10,9 +11,29 @@ const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) =
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
+    const [typingChats, setTypingChats] = useState({});
+    const userId = localStorage.getItem('userId');
 
     useEffect(() => {
         fetchChats();
+
+        const socket = getSocket();
+        if (socket) {
+            subscribeToChatFeatures({
+                onTyping: ({ chatId }) => {
+                    setTypingChats(prev => ({ ...prev, [chatId]: true }));
+                },
+                onStopTyping: ({ chatId }) => {
+                    setTypingChats(prev => {
+                        const next = { ...prev };
+                        delete next[chatId];
+                        return next;
+                    });
+                }
+            });
+            // Also listen for new messages to refresh sidebar order
+            socket.on('receive_message', () => fetchChats());
+        }
     }, []);
 
     useEffect(() => {
@@ -183,14 +204,30 @@ const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) =
                                                 <h3 className="text-[17px] font-normal text-gray-900 truncate">
                                                     {getChatName(chat)}
                                                 </h3>
-                                                <span className={`text-xs ${activeChatId === chat.id ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                <span className={`text-[11px] ${activeChatId === chat.id ? 'text-gray-500' : 'text-gray-400'}`}>
                                                     {lastMsg.time}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-500 truncate flex items-center gap-1">
-                                                {/* Simulate 'read' ticks for now if needed, or just text */}
-                                                <span>{lastMsg.content}</span>
-                                            </p>
+                                            <div className="flex items-center justify-between">
+                                                <p className={`text-[13px] truncate flex items-center gap-1 ${typingChats[chat.id] ? 'text-emerald-500 font-medium' : 'text-gray-500'}`}>
+                                                    {typingChats[chat.id] ? (
+                                                        'typing...'
+                                                    ) : (
+                                                        <>
+                                                            {chat.messages?.[0]?.senderId === userId && (
+                                                                <CheckCheck size={14} className="text-gray-400" />
+                                                            )}
+                                                            {lastMsg.content}
+                                                        </>
+                                                    )}
+                                                </p>
+                                                {/* Unread Indicator Placeholder */}
+                                                {!typingChats[chat.id] && chat.unreadCount > 0 && (
+                                                    <span className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.2rem] text-center">
+                                                        {chat.unreadCount}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </li>
                                 );

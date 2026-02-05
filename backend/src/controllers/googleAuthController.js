@@ -42,17 +42,19 @@ const googleAuth = async (req, res) => {
                     passwordHash: '', // No password for OAuth users
                     role: 'TEAM_MEMBER', // Default role for new Google sign-ups
                     googleId: googleId,
-                    profilePicture: picture
+                    profilePicture: picture,
+                    isVerified: true // Google accounts are pre-verified
                 }
             });
         } else {
-            // Update Google ID and profile picture if not set
-            if (!user.googleId || user.profilePicture !== picture) {
+            // Update Google ID and profile picture if not set, and ensure verified
+            if (!user.googleId || user.profilePicture !== picture || !user.isVerified) {
                 user = await prisma.user.update({
                     where: { id: user.id },
                     data: {
                         googleId: googleId,
-                        profilePicture: picture
+                        profilePicture: picture,
+                        isVerified: true
                     }
                 });
             }
@@ -70,7 +72,8 @@ const googleAuth = async (req, res) => {
                 role: user.role,
                 fullName: user.fullName,
                 department: user.department,
-                profilePicture: user.profilePicture
+                profilePicture: user.profilePicture,
+                campusAccess: user.campusAccess
             }
         });
 

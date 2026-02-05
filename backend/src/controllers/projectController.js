@@ -1,6 +1,8 @@
 const prisma = require('../utils/prisma');
 const { ROLES } = require('../utils/policies');
 const { createNotification } = require('./notificationController');
+const { sendProjectEmail } = require('../services/emailService');
+const { sendProjectSMS } = require('../services/smsService');
 
 
 // Create a new project
@@ -47,15 +49,37 @@ const createProject = async (req, res) => {
         });
 
         // Trigger notifications for participants
-        allMemberIds.forEach(userId => {
-            if (userId !== creatorId) {
+        const participants = await prisma.user.findMany({
+            where: { id: { in: allMemberIds } }
+        });
+
+        participants.forEach(user => {
+            if (user.id !== creatorId) {
                 createNotification(
-                    userId,
+                    user.id,
                     'PROJECT_INVITE',
                     'Added to New Project',
                     `You have been added to the project: "${name}"`,
                     `/projects/${project.id}`
                 );
+
+                // Send Email notification
+                if (user.email) {
+                    sendProjectEmail(user.email, {
+                        name: project.name,
+                        description: project.description,
+                        managerName: req.user.fullName, // The person who created/assigned
+                        role: user.id === managerId ? 'Project Manager' : 'Team Member'
+                    });
+                }
+
+                // Send SMS notification
+                if (user.phoneNumber) {
+                    sendProjectSMS(user.phoneNumber, {
+                        name: project.name,
+                        role: user.id === managerId ? 'Project Manager' : 'Team Member'
+                    });
+                }
             }
         });
 
@@ -217,6 +241,25 @@ const addMember = async (req, res) => {
                     userId
                 }
             }).catch(() => { }); // Ignore if already in chat
+        }
+
+        // Send Email notification to the added member
+        const addedUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (addedUser && addedUser.email) {
+            sendProjectEmail(addedUser.email, {
+                name: project.name,
+                description: project.description,
+                managerName: req.user.fullName,
+                role: 'Team Member'
+            });
+        }
+
+        // Send SMS notification to the added member
+        if (addedUser && addedUser.phoneNumber) {
+            sendProjectSMS(addedUser.phoneNumber, {
+                name: project.name,
+                role: 'Team Member'
+            });
         }
 
         res.json(project);

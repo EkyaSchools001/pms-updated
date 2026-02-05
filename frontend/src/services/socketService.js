@@ -37,11 +37,28 @@ export const subscribeToMessageUpdates = (onEdit, onDelete) => {
     socket.on('message_deleted', (data) => onDelete(data));
 };
 
-export const sendMessage = () => {
-    if (socket) {
-        // We are sending via API, but we could also emit here if we wanted optimistic UI
-        // socket.emit('send_message', { chatId: _chatId, content: _content });
-    }
+export const subscribeToChatFeatures = ({ onTyping, onStopTyping, onRead, onReaction }) => {
+    if (!socket) return;
+    socket.on('typing', (data) => onTyping && onTyping(data));
+    socket.on('stop_typing', (data) => onStopTyping && onStopTyping(data));
+    socket.on('user_read_messages', (data) => onRead && onRead(data));
+    socket.on('reaction_added', (data) => onReaction && onReaction(data));
+};
+
+export const emitTyping = (chatId, userName) => {
+    if (socket) socket.emit('typing', { chatId, userName });
+};
+
+export const emitStopTyping = (chatId) => {
+    if (socket) socket.emit('stop_typing', { chatId });
+};
+
+export const emitMarkAsRead = (chatId) => {
+    if (socket) socket.emit('mark_as_read', { chatId });
+};
+
+export const emitAddReaction = (messageId, emoji, chatId) => {
+    if (socket) socket.emit('add_reaction', { messageId, emoji, chatId });
 };
 
 export const getSocket = () => socket;

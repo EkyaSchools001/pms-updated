@@ -9,7 +9,7 @@ router.use(authenticate);
 // Create new user (Admin only)
 router.post('/', authorize(['ADMIN']), async (req, res) => {
     try {
-        const { fullName, email, password, role, department, managerId, dateOfBirth } = req.body;
+        const { fullName, email, password, role, department, managerId, dateOfBirth, campusAccess } = req.body;
 
         if (!fullName || !email || !password) {
             return res.status(400).json({ message: 'Full name, email and password are required' });
@@ -34,7 +34,8 @@ router.post('/', authorize(['ADMIN']), async (req, res) => {
                 role: role || 'TEAM_MEMBER',
                 department: department || null,
                 managerId: managerId || null,
-                dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null
+                dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+                campusAccess: campusAccess || null
             },
             select: {
                 id: true,
@@ -42,6 +43,7 @@ router.post('/', authorize(['ADMIN']), async (req, res) => {
                 fullName: true,
                 role: true,
                 department: true,
+                campusAccess: true,
                 createdAt: true
             }
         });
@@ -65,6 +67,7 @@ router.get('/', async (req, res) => {
                 department: true,
                 dateOfBirth: true,
                 profilePicture: true,
+                campusAccess: true,
 
                 createdAt: true,
                 manager: {
@@ -96,7 +99,7 @@ router.get('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, email, role, department, managerId, dateOfBirth } = req.body;
+        const { fullName, email, role, department, managerId, dateOfBirth, campusAccess } = req.body;
         const currentUser = req.user;
 
 
@@ -184,6 +187,10 @@ router.put('/:id', async (req, res) => {
             updateData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
         }
 
+        if (campusAccess !== undefined) {
+            updateData.campusAccess = campusAccess;
+        }
+
         // Update user
         const updatedUser = await prisma.user.update({
             where: { id },
@@ -194,6 +201,7 @@ router.put('/:id', async (req, res) => {
                 fullName: true,
                 role: true,
                 profilePicture: true,
+                campusAccess: true,
                 createdAt: true
             }
         });

@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
+import { initiateSocketConnection, disconnectSocket } from '../services/socketService';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,7 @@ export const AuthProvider = ({ children }) => {
                 try {
                     const { data } = await api.get('auth/me');
                     localStorage.setItem('user', JSON.stringify(data));
+                    initiateSocketConnection(token);
                     setUser(data);
                 } catch (error) {
                     console.error('Failed to fetch user:', error);
@@ -36,8 +38,9 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('userId', data.user.id); // Store userId for chat
+            initiateSocketConnection(data.token);
             setUser(data.user);
-            return { success: true };
+            return { success: true, user: data.user };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Login failed' };
         }
@@ -49,8 +52,9 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('userId', data.user.id); // Store userId for chat
+            initiateSocketConnection(data.token);
             setUser(data.user);
-            return { success: true };
+            return { success: true, user: data.user };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Registration failed' };
         }
@@ -60,6 +64,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('userId');
+        disconnectSocket();
         setUser(null);
     };
 
@@ -69,8 +74,9 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('userId', data.user.id);
+            initiateSocketConnection(data.token);
             setUser(data.user);
-            return { success: true };
+            return { success: true, user: data.user };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Google login failed' };
         }

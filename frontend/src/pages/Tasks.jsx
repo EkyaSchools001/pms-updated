@@ -147,19 +147,26 @@ const Tasks = () => {
                     { label: 'Backlog', count: stats.todo, icon: CheckSquare, color: 'gray' },
                     { label: 'Active Sprint', count: stats.inProgress, icon: Clock, color: 'blue' },
                     { label: 'Completed', count: stats.done, icon: CheckCircle2, color: 'emerald' },
-                ].map((stat, i) => (
-                    <div key={i} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/40 group hover:-translate-y-1 transition-all">
-                        <div className="flex items-center gap-6">
-                            <div className={`p-4 bg-${stat.color}-50 text-${stat.color}-600 rounded-2xl group-hover:scale-110 transition-transform`}>
-                                <stat.icon size={28} />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-400 font-black uppercase tracking-widest mb-1">{stat.label}</p>
-                                <p className="text-3xl font-black text-gray-900">{stat.count}</p>
+                ].map((stat, i) => {
+                    const colorMap = {
+                        gray: 'bg-gray-50 text-gray-600',
+                        blue: 'bg-blue-50 text-blue-600',
+                        emerald: 'bg-emerald-50 text-emerald-600'
+                    };
+                    return (
+                        <div key={i} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/40 group hover:-translate-y-1 transition-all">
+                            <div className="flex items-center gap-6">
+                                <div className={clsx("p-4 rounded-2xl group-hover:scale-110 transition-transform", colorMap[stat.color])}>
+                                    <stat.icon size={28} />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest mb-1">{stat.label}</p>
+                                    <p className="text-3xl font-black text-gray-900">{stat.count}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Workplace Toolbar */}

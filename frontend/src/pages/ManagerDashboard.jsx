@@ -83,7 +83,7 @@ const ManagerDashboard = () => {
 
     const handleAssign = async (ticketId, assigneeId) => {
         try {
-            await api.put(`tickets/${ticketId}`, { assigneeId });
+            await api.put(`tickets/${ticketId}`, { assigneeId, assignedDepartment: null });
             fetchData();
             fetchTicketLogs(ticketId);
             if (selectedTicket) {
@@ -560,14 +560,26 @@ const ManagerDashboard = () => {
                                                 {log.action === 'CREATED' ? 'Ticket raised by ' : 'Updated by '}
                                                 <span className="text-primary font-bold">{log.user?.fullName}</span>
                                             </p>
-                                            {log.details && log.details.startsWith('{') && (
-                                                <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[9px] text-gray-400 font-mono">
-                                                    {Object.entries(JSON.parse(log.details))
-                                                        .filter(([_, v]) => v)
-                                                        .map(([k, v]) => `${k}: ${v}`)
-                                                        .join(' | ')}
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                try {
+                                                    const details = JSON.parse(log.details);
+                                                    if (!details) return null;
+                                                    return (
+                                                        <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[9px] text-gray-400 font-mono">
+                                                            {Object.entries(details)
+                                                                .filter(([_, v]) => v)
+                                                                .map(([k, v]) => `${k}: ${v}`)
+                                                                .join(' | ')}
+                                                        </div>
+                                                    );
+                                                } catch (e) {
+                                                    return log.details && (
+                                                        <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[9px] text-gray-400 font-mono italic">
+                                                            {log.details}
+                                                        </div>
+                                                    );
+                                                }
+                                            })()}
                                         </div>
                                     ))}
                                 </div>

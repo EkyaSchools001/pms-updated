@@ -1,4 +1,6 @@
 const prisma = require('../utils/prisma');
+const { sendChatMessageEmail } = require('../services/emailService');
+const { sendChatMessageSMS } = require('../services/smsService');
 
 // Create a private chat (1-on-1)
 exports.createPrivateChat = async (req, res) => {
@@ -74,7 +76,7 @@ exports.uploadFile = async (req, res) => {
 // Send a message
 exports.sendMessage = async (req, res) => {
     try {
-        const { chatId, content, attachments } = req.body;
+        const { chatId, content, attachments, replyToId } = req.body;
         const senderId = req.user.id;
 
         if (!chatId || (!content && !attachments)) {
@@ -101,15 +103,54 @@ exports.sendMessage = async (req, res) => {
                 senderId,
                 content: content || '', // Allow empty content if there's an attachment
                 attachments: attachments ? JSON.stringify(attachments) : null,
+                replyToId: replyToId || null,
             },
             include: {
-                sender: { select: { id: true, fullName: true } },
+                sender: { select: { id: true, fullName: true, profilePicture: true } },
+                replyTo: {
+                    include: {
+                        sender: { select: { id: true, fullName: true } }
+                    }
+                },
+                reactions: {
+                    include: { user: { select: { id: true, fullName: true } } }
+                }
             },
         });
 
         // Emit socket event
         const io = req.app.get('io');
         io.to(chatId).emit('receive_message', message);
+
+        // Send Email notifications to other participants
+        const otherParticipants = await prisma.chatParticipant.findMany({
+            where: {
+                chatId,
+                userId: { not: senderId }
+            },
+            include: { user: true }
+        });
+
+        // Get chat details (for group name if applicable)
+        const chat = await prisma.chat.findUnique({ where: { id: chatId } });
+
+        otherParticipants.forEach(participant => {
+            if (participant.user.email) {
+                sendChatMessageEmail(participant.user.email, {
+                    senderName: req.user.fullName,
+                    content: content || 'Sent an attachment',
+                    chatName: chat.name || 'Private Chat',
+                    isGroup: chat.type !== 'PRIVATE'
+                });
+            }
+
+            if (participant.user.phoneNumber) {
+                sendChatMessageSMS(participant.user.phoneNumber, {
+                    senderName: req.user.fullName,
+                    content: content || 'Sent an attachment'
+                });
+            }
+        });
 
         res.status(201).json(message);
     } catch (error) {
@@ -142,7 +183,15 @@ exports.getChatHistory = async (req, res) => {
             where: { chatId },
             orderBy: { createdAt: 'asc' },
             include: {
-                sender: { select: { id: true, fullName: true } },
+                sender: { select: { id: true, fullName: true, profilePicture: true } },
+                replyTo: {
+                    include: {
+                        sender: { select: { id: true, fullName: true } }
+                    }
+                },
+                reactions: {
+                    include: { user: { select: { id: true, fullName: true } } }
+                }
             },
         });
 
@@ -167,7 +216,7 @@ exports.getUserChats = async (req, res) => {
             include: {
                 participants: {
                     include: {
-                        user: { select: { id: true, fullName: true, role: true } },
+                        user: { select: { id: true, fullName: true, role: true, profilePicture: true, lastSeen: true } },
                     },
                 },
                 messages: {

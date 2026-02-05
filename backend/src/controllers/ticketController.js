@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const { sendTicketEmail } = require('../services/emailService');
+const { sendTicketSMS } = require('../services/smsService');
 const { createNotification } = require('./notificationController');
 
 /**
@@ -73,6 +74,26 @@ const createTicket = async (req, res) => {
             }
         });
 
+        // Send Email to Assignee if assigned
+        if (ticket.assignee && ticket.assignee.email) {
+            sendTicketEmail(ticket.assignee.email, 'New Ticket Assigned', {
+                title: ticket.title,
+                priority: ticket.priority,
+                reporterName: ticket.reporter.fullName,
+                description: ticket.description,
+                projectName: ticket.project?.name || 'General',
+                isReminder: false
+            });
+        }
+
+        // Send SMS to Assignee if assigned
+        if (ticket.assignee && ticket.assignee.phoneNumber) {
+            sendTicketSMS(ticket.assignee.phoneNumber, {
+                title: ticket.title,
+                priority: ticket.priority
+            });
+        }
+
         res.status(201).json(ticket);
     } catch (error) {
         console.error('Create Ticket Error:', error);
@@ -87,7 +108,7 @@ const getTickets = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
-        const campusAccess = req.user.campusAccess ? req.user.campusAccess.split(',') : [];
+        const campusAccess = req.user.campusAccess ? req.user.campusAccess.split(',').map(c => c.trim()) : [];
 
         let where = {};
 
@@ -181,6 +202,26 @@ const updateTicket = async (req, res) => {
                 `You have been assigned to ticket: "${ticket.title}"`,
                 `/manager-dashboard`
             );
+
+            // Send Email to New Assignee
+            if (ticket.assignee && ticket.assignee.email) {
+                sendTicketEmail(ticket.assignee.email, 'Ticket Assigned to You', {
+                    title: ticket.title,
+                    priority: ticket.priority,
+                    reporterName: ticket.reporter.fullName,
+                    description: ticket.description,
+                    projectName: ticket.project?.name || 'General',
+                    isReminder: false
+                });
+            }
+
+            // Send SMS to New Assignee
+            if (ticket.assignee && ticket.assignee.phoneNumber) {
+                sendTicketSMS(ticket.assignee.phoneNumber, {
+                    title: ticket.title,
+                    priority: ticket.priority
+                });
+            }
         }
 
         if (status && status !== ticket.status) {
@@ -305,7 +346,7 @@ const getRecentTickets = async (req, res) => {
         if (user.role === 'ADMIN') {
             where = {};
         } else if (user.role === 'MANAGER') {
-            const campusAccess = user.campusAccess ? user.campusAccess.split(',') : [];
+            const campusAccess = user.campusAccess ? user.campusAccess.split(',').map(c => c.trim()) : [];
             where = { campus: { in: campusAccess } };
         }
 
@@ -376,7 +417,7 @@ module.exports = {
     getTicketStatus,
     getRecentTickets,
     getTicketLogs,
-    checkTicketReminders: require('../utils/ticketReminders')
+    checkTicketReminders: require('../utils/ticketReminders').checkTicketReminders
 };
 
 

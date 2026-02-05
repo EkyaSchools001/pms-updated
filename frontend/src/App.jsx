@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CallProvider } from './context/CallContext';
 
 import DashboardLayout from './layouts/DashboardLayout';
 import Login from './pages/Login';
@@ -45,107 +46,109 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <Router>
+        <CallProvider>
+          <Router>
 
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/register"
-              element={
-                <PrivateRoute allowedRoles={['ADMIN']}>
-                  <Register />
-                </PrivateRoute>
-              }
-            />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/register"
+                element={
+                  <PrivateRoute allowedRoles={['ADMIN']}>
+                    <Register />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/projects"
-              element={
-                <PrivateRoute>
-                  <Projects />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/projects"
+                element={
+                  <PrivateRoute>
+                    <Projects />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/projects/:id"
-              element={
-                <PrivateRoute>
-                  <ProjectDetails />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/projects/:id"
+                element={
+                  <PrivateRoute>
+                    <ProjectDetails />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/tasks"
-              element={
-                <PrivateRoute>
-                  <Tasks />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/tasks"
+                element={
+                  <PrivateRoute>
+                    <Tasks />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/team"
-              element={
-                <PrivateRoute allowedRoles={['ADMIN', 'MANAGER', 'TEAM_MEMBER']}>
-                  <TeamMembers />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/team"
+                element={
+                  <PrivateRoute allowedRoles={['ADMIN', 'MANAGER', 'TEAM_MEMBER']}>
+                    <TeamMembers />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/chat"
-              element={
-                <PrivateRoute>
-                  <ChatPage />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/chat"
+                element={
+                  <PrivateRoute>
+                    <ChatPage />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/calendar"
-              element={
-                <PrivateRoute>
-                  <CalendarPage />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/calendar"
+                element={
+                  <PrivateRoute>
+                    <CalendarPage />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/reports"
-              element={
-                <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
-                  <Reports />
-                </PrivateRoute>
-              }
-            />
-
-
-
-            <Route
-              path="/manager-dashboard"
-              element={
-                <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
-                  <ManagerDashboard />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/reports"
+                element={
+                  <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                    <Reports />
+                  </PrivateRoute>
+                }
+              />
 
 
 
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </Router>
+              <Route
+                path="/manager-dashboard"
+                element={
+                  <PrivateRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                    <ManagerDashboard />
+                  </PrivateRoute>
+                }
+              />
+
+
+
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+            </Routes>
+          </Router>
+        </CallProvider>
       </ThemeProvider>
     </AuthProvider >
 
