@@ -157,7 +157,14 @@ const getProjectById = async (req, res) => {
                     }
                 },
                 manager: { select: { fullName: true } },
-                members: { select: { id: true, fullName: true, email: true, role: true } },
+                members: {
+                    where: {
+                        role: {
+                            in: ['MANAGER', 'TEAM_MEMBER']
+                        }
+                    },
+                    select: { id: true, fullName: true, email: true, role: true }
+                },
                 chat: { select: { id: true } }
             },
         });
