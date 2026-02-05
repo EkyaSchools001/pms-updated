@@ -230,6 +230,17 @@ const addMember = async (req, res) => {
         const { id } = req.params;
         const { userId } = req.body;
 
+        const userToAdd = await prisma.user.findUnique({ where: { id: userId } });
+        if (!userToAdd) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (['ADMIN', 'CUSTOMER'].includes(userToAdd.role)) {
+            return res.status(403).json({
+                message: `Cannot add users with role ${userToAdd.role} to the project team.`
+            });
+        }
+
         const project = await prisma.project.update({
             where: { id },
             data: {

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Calendar as CalendarIcon, User, CheckCircle, Clock, MoreHorizontal, AlertCircle, ArrowUpRight, ChevronRight, LayoutGrid, List, Ticket, BarChart3, TrendingUp, Users, Edit2, Save, IndianRupee } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, User, CheckCircle, Clock, MoreHorizontal, AlertCircle, ArrowUpRight, ChevronRight, LayoutGrid, List, Ticket, BarChart3, TrendingUp, Users, Edit2, Save, IndianRupee, X } from 'lucide-react';
 
 import clsx from 'clsx';
 import { format, eachDayOfInterval, isSameDay, addDays, startOfWeek, differenceInDays } from 'date-fns';
@@ -14,7 +14,7 @@ const ProjectDetails = () => {
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showTaskModal, setShowTaskModal] = useState(false);
-    const [activeTab, setActiveTab] = useState('BOARD'); // BOARD, TIMELINE, TICKETS
+    const [activeTab, setActiveTab] = useState('BOARD'); // BOARD, TIMELINE, TICKETS, TEAM
     const [newTask, setNewTask] = useState({
         title: '',
         description: '',
@@ -24,6 +24,10 @@ const ProjectDetails = () => {
         assigneeIds: []
     });
     const [members, setMembers] = useState([]);
+
+    // Team Management States
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [availableUsers, setAvailableUsers] = useState([]);
 
     const fetchProjectDetails = useCallback(async () => {
         try {
@@ -67,6 +71,46 @@ const ProjectDetails = () => {
         const completed = project.tasks.filter(t => t.status === 'DONE').length;
         return Math.round((completed / project.tasks.length) * 100);
     };
+
+    // --- Team Management Handlers ---
+
+    const fetchAvailableUsers = async () => {
+        try {
+            const { data } = await api.get('users');
+            // Filter out existing members, Admins, and Customers
+            const eligibleUsers = data.filter(u =>
+                !members.some(m => m.id === u.id) &&
+                u.role !== 'ADMIN' &&
+                u.role !== 'CUSTOMER'
+            );
+            setAvailableUsers(eligibleUsers);
+            setShowAddMemberModal(true);
+        } catch (error) {
+            console.error('Failed to fetch users', error);
+            alert('Failed to load user list');
+        }
+    };
+
+    const handleAddMember = async (userId) => {
+        try {
+            await api.post(`projects/${id}/members`, { userId });
+            setShowAddMemberModal(false);
+            fetchProjectDetails();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to add member');
+        }
+    };
+
+    const handleRemoveMember = async (userId) => {
+        if (!window.confirm('Are you sure you want to remove this member?')) return;
+        try {
+            await api.delete(`projects/${id}/members`, { data: { userId } });
+            fetchProjectDetails();
+        } catch (error) {
+            alert('Failed to remove member');
+        }
+    };
+
 
     if (loading) return (
         <div className="flex items-center justify-center h-[60vh]">
@@ -146,14 +190,25 @@ const ProjectDetails = () => {
                     <TabButton active={activeTab === 'BOARD'} onClick={() => setActiveTab('BOARD')} icon={LayoutGrid} label="Kanban Board" />
                     <TabButton active={activeTab === 'TIMELINE'} onClick={() => setActiveTab('TIMELINE')} icon={CalendarIcon} label="Sprint Cycle" />
                     <TabButton active={activeTab === 'TICKETS'} onClick={() => setActiveTab('TICKETS')} icon={Ticket} label="Project Tickets" />
+                    <TabButton active={activeTab === 'TEAM'} onClick={() => setActiveTab('TEAM')} icon={Users} label="Team" />
                 </div>
                 {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
-                    <button
-                        onClick={() => setShowTaskModal(true)}
-                        className="btn btn-primary px-6 py-2.5 rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40"
-                    >
-                        <Plus size={18} /> New Task
-                    </button>
+                    <div className="flex gap-2">
+                        {activeTab === 'TEAM' && user?.role === 'ADMIN' && (
+                            <button
+                                onClick={fetchAvailableUsers}
+                                className="btn btn-secondary px-6 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700"
+                            >
+                                <Plus size={18} /> Add Member
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setShowTaskModal(true)}
+                            className="btn btn-primary px-6 py-2.5 rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40"
+                        >
+                            <Plus size={18} /> New Task
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -161,11 +216,16 @@ const ProjectDetails = () => {
             <div className="min-h-[60vh]">
                 {activeTab === 'BOARD' && <KanbanView tasksByStatus={tasksByStatus} handleStatusChange={handleStatusChange} />}
                 {activeTab === 'TIMELINE' && <TimelineView tasks={project.tasks} project={project} user={user} onRefresh={fetchProjectDetails} onAddTask={() => setShowTaskModal(true)} />}
-
                 {activeTab === 'TICKETS' && <TicketsView tickets={project.tickets} />}
+                {activeTab === 'TEAM' && (
+                    <TeamView
+                        members={members}
+                        manager={project.manager}
+                        currentUser={user}
+                        onRemove={handleRemoveMember}
+                    />
+                )}
             </div>
-
-
 
             {/* Task Modal remains the same structure but with Start Date */}
             {showTaskModal && (
@@ -177,6 +237,124 @@ const ProjectDetails = () => {
                     members={members}
                 />
             )}
+
+            {showAddMemberModal && (
+                <AddMemberModal
+                    onClose={() => setShowAddMemberModal(false)}
+                    users={availableUsers}
+                    onAdd={handleAddMember}
+                />
+            )}
+        </div>
+    );
+};
+
+// --- Sub-Components ---
+
+const TeamView = ({ members, manager, currentUser, onRemove }) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Manager Card */}
+        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-black border-4 border-white shadow-sm">
+                    {manager.fullName.charAt(0)}
+                </div>
+                <div>
+                    <h3 className="font-bold text-gray-900">{manager.fullName}</h3>
+                    <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Project Manager</p>
+                </div>
+            </div>
+        </div>
+
+        {/* Members */}
+        {members.filter(m => m.id !== manager.id).map(member => (
+            <div key={member.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group relative">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center text-lg font-bold border-4 border-white shadow-sm">
+                            {member.fullName.charAt(0)}
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">{member.fullName}</h3>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{member.role}</p>
+                        </div>
+                    </div>
+                    {currentUser?.role === 'ADMIN' && (
+                        <button
+                            onClick={() => onRemove(member.id)}
+                            className="p-2 bg-red-50 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-100"
+                            title="Remove Member"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
+                </div>
+            </div>
+        ))}
+
+        {members.length === 1 && members[0].id === manager.id && (
+            <div className="col-span-full py-12 text-center border-2 border-dashed border-gray-200 rounded-3xl text-gray-400 font-medium opacity-50">
+                No additional team members assigned yet.
+            </div>
+        )}
+    </div>
+);
+
+const AddMemberModal = ({ onClose, users, onAdd }) => {
+    const [search, setSearch] = useState('');
+    const filteredUsers = users.filter(u => u.fullName.toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <div className="bg-white p-8 rounded-[2.5rem] w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col max-h-[80vh]">
+                <div className="flex justify-between items-center mb-6 shrink-0">
+                    <div>
+                        <h2 className="text-2xl font-black text-gray-900">Add Team Member</h2>
+                        <p className="text-sm text-gray-500 font-bold">Select eligible staff to join the project</p>
+                    </div>
+                    <button onClick={onClose} className="p-3 hover:bg-gray-100 rounded-2xl transition-all text-gray-400">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                <div className="mb-4 shrink-0">
+                    <input
+                        className="input-field"
+                        placeholder="Search by name..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        autoFocus
+                    />
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                    {filteredUsers.length > 0 ? filteredUsers.map(user => (
+                        <button
+                            key={user.id}
+                            onClick={() => onAdd(user.id)}
+                            className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                                    {user.fullName.charAt(0)}
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900">{user.fullName}</p>
+                                    <p className="text-xs text-gray-400 font-medium">{user.role}</p>
+                                </div>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                                <Plus size={16} />
+                            </div>
+                        </button>
+                    )) : (
+                        <div className="text-center py-8 text-gray-400 text-sm font-medium">
+                            No eligible users found.
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
