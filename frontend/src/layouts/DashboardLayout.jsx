@@ -8,14 +8,27 @@ import FloatingChatbot from '../components/FloatingChatbot';
 import NotificationDropdown from '../components/NotificationDropdown';
 
 // Get API base URL for images
+// Get API base URL for images
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // Helper to get full image URL
 const getImageUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http') || path.startsWith('data:')) return path;
-    // Remove /api/v1 from API_URL if present to get base URL
-    const baseUrl = API_URL.replace('/api/v1', '');
-    return `${baseUrl}${path}`;
+
+    // Clean up base URL
+    let baseUrl = API_URL;
+    // Remove trailing slash if present
+    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+    // Remove /api/v1 if present (case insensitive)
+    if (baseUrl.toLowerCase().endsWith('/api/v1')) baseUrl = baseUrl.slice(0, -7);
+    // Remove trailing slash again if present after removing api/v1
+    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+    // Ensure path starts with /
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    return `${baseUrl}${cleanPath}`;
 };
 
 
@@ -220,7 +233,7 @@ const DashboardLayout = ({ children }) => {
 
                                 {user?.profilePicture ? (
                                     <img
-                                        src={getImageUrl(user.profilePicture)}
+                                        src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
                                         alt={user.fullName}
                                         className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
                                     />
@@ -247,7 +260,7 @@ const DashboardLayout = ({ children }) => {
                                             <div className="relative">
                                                 {user?.profilePicture ? (
                                                     <img
-                                                        src={getImageUrl(user.profilePicture)}
+                                                        src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
                                                         alt={user.fullName}
                                                         className="w-16 h-16 rounded-full object-cover border-4 border-white/30 backdrop-blur-sm"
                                                     />

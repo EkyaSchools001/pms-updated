@@ -12,6 +12,24 @@ const Sidebar = ({ isOpen, onClose }) => {
     const { user, logout } = useAuth();
     const location = useLocation();
 
+    // Get API base URL for images
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+    // Helper to get full image URL
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+
+        // Clean up base URL
+        let baseUrl = API_URL;
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        if (baseUrl.toLowerCase().endsWith('/api/v1')) baseUrl = baseUrl.slice(0, -7);
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `${baseUrl}${cleanPath}`;
+    };
+
     const navigate = useNavigate();
     const [upcomingBirthdays, setUpcomingBirthdays] = useState([]);
 
@@ -118,8 +136,16 @@ const Sidebar = ({ isOpen, onClose }) => {
                     {/* User Profile Card */}
                     <div className="bg-[var(--bg-background)] rounded-2xl p-4 border border-[var(--border-color)] mb-2 group cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] border-2 border-[var(--bg-card)] shadow-sm flex items-center justify-center text-sm font-bold text-primary relative">
-                                {user?.fullName?.charAt(0) || 'U'}
+                            <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] border-2 border-[var(--bg-card)] shadow-sm flex items-center justify-center text-sm font-bold text-primary relative overflow-hidden">
+                                {user?.profilePicture ? (
+                                    <img
+                                        src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
+                                        alt={user.fullName}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span>{user?.fullName?.charAt(0) || 'U'}</span>
+                                )}
                                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[var(--bg-card)] rounded-full"></span>
                             </div>
                             <div className="overflow-hidden flex-1">
