@@ -3,6 +3,85 @@ import { X, Calendar, Clock, Video, MapPin, Users, Info, AlertCircle } from 'luc
 import api from '../services/api';
 import clsx from 'clsx';
 
+// Helper to parse ISO string to 12h format components
+const parseDateTime = (isoString) => {
+    if (!isoString) return { date: '', hour: '12', minute: '00', ampm: 'AM' };
+    const date = new Date(isoString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+
+    return {
+        date: `${yyyy}-${mm}-${dd}`,
+        hour: String(hours).padStart(2, '0'),
+        minute: minutes,
+        ampm
+    };
+};
+
+const TimePicker = ({ label, value, onChange }) => {
+    const { date, hour, minute, ampm } = parseDateTime(value);
+
+    return (
+        <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <Clock size={14} /> {label}
+            </label>
+            <div className="flex gap-2">
+                {/* Date Picker */}
+                <input
+                    type="date"
+                    required
+                    className="flex-[2] p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    value={date}
+                    onChange={(e) => onChange('date', e.target.value)}
+                />
+
+                {/* Hour */}
+                <select
+                    className="flex-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none appearance-none text-center"
+                    value={hour}
+                    onChange={(e) => onChange('hour', e.target.value)}
+                >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+                        <option key={h} value={String(h).padStart(2, '0')}>{String(h).padStart(2, '0')}</option>
+                    ))}
+                </select>
+
+                <span className="self-center font-bold text-gray-300">:</span>
+
+                {/* Minute */}
+                <select
+                    className="flex-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none appearance-none text-center"
+                    value={minute}
+                    onChange={(e) => onChange('minute', e.target.value)}
+                >
+                    {['00', '15', '30', '45'].map(m => (
+                        <option key={m} value={m}>{m}</option>
+                    ))}
+                </select>
+
+                {/* AM/PM */}
+                <select
+                    className="flex-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none appearance-none text-center"
+                    value={ampm}
+                    onChange={(e) => onChange('ampm', e.target.value)}
+                >
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+        </div>
+    );
+};
+
 const ScheduleMeetingModal = ({ isOpen, onClose, onSuccess, initialDate, meetingData }) => {
     const [formData, setFormData] = useState({
         title: '',
@@ -126,6 +205,32 @@ const ScheduleMeetingModal = ({ isOpen, onClose, onSuccess, initialDate, meeting
         }
     };
 
+    // Helper to update specific component of date-time
+    const updateDateTime = (field, type, value) => {
+        const currentIso = formData[field];
+        let { date, hour, minute, ampm } = parseDateTime(currentIso);
+
+        if (type === 'date') date = value;
+        if (type === 'hour') hour = value;
+        if (type === 'minute') minute = value;
+        if (type === 'ampm') ampm = value;
+
+        // Convert back to 24h for ISO string
+        let hours24 = parseInt(hour, 10);
+        if (ampm === 'PM' && hours24 !== 12) hours24 += 12;
+        if (ampm === 'AM' && hours24 === 12) hours24 = 0;
+
+        const newDate = new Date(`${date}T${String(hours24).padStart(2, '0')}:${minute}:00`);
+        // Handle invalid date (e.g. while typing)
+        if (isNaN(newDate.getTime())) return;
+
+        // Construct ISO-like string manually to preserve local time selection
+        const localIso = (`${date}T${String(hours24).padStart(2, '0')}:${minute}`);
+
+        setFormData(prev => ({ ...prev, [field]: localIso }));
+    };
+
+
     const handleParticipantToggle = (userId) => {
         setFormData(prev => ({
             ...prev,
@@ -192,33 +297,16 @@ const ScheduleMeetingModal = ({ isOpen, onClose, onSuccess, initialDate, meeting
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-                        {/* Start Time */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                <Clock size={14} /> Start Time
-                            </label>
-                            <input
-                                type="datetime-local"
-                                required
-                                className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                value={formData.startTime}
-                                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                            />
-                        </div>
-
-                        {/* End Time */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                <Clock size={14} /> End Time
-                            </label>
-                            <input
-                                type="datetime-local"
-                                required
-                                className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                value={formData.endTime}
-                                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                            />
-                        </div>
+                        <TimePicker
+                            label="Start Time"
+                            value={formData.startTime}
+                            onChange={(type, val) => updateDateTime('startTime', type, val)}
+                        />
+                        <TimePicker
+                            label="End Time"
+                            value={formData.endTime}
+                            onChange={(type, val) => updateDateTime('endTime', type, val)}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
