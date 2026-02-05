@@ -9,13 +9,25 @@ const { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } = requir
  */
 const getMeetings = async (req, res) => {
     try {
-        const meetings = await prisma.meeting.findMany({
-            where: {
-                OR: [
-                    { organizerId: req.user.id },
-                    { participants: { some: { userId: req.user.id } } }
+        let whereClause = {
+            OR: [
+                { organizerId: req.user.id },
+                { participants: { some: { userId: req.user.id } } }
+            ]
+        };
+
+        // Role-based visibility: Customers only see meetings for their projects where they are participants
+        if (req.user.role === 'CUSTOMER') {
+            whereClause = {
+                AND: [
+                    { participants: { some: { userId: req.user.id } } },
+                    { project: { customerId: req.user.id } }
                 ]
-            },
+            };
+        }
+
+        const meetings = await prisma.meeting.findMany({
+            where: whereClause,
             include: {
                 organizer: { select: { id: true, fullName: true, email: true } },
                 participants: {

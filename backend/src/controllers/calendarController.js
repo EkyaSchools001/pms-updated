@@ -18,15 +18,29 @@ const getCalendarEvents = async (req, res) => {
         }
 
         // 1. Fetch Meetings
-        const meetings = await prisma.meeting.findMany({
-            where: {
+        let meetingWhere = {
+            status: 'SCHEDULED',
+            OR: [
+                { organizerId: req.user.id },
+                { participants: { some: { userId: req.user.id } } }
+            ],
+            ...dateFilter
+        };
+
+        // Role-based visibility for Customers
+        if (req.user.role === 'CUSTOMER') {
+            meetingWhere = {
                 status: 'SCHEDULED',
-                OR: [
-                    { organizerId: req.user.id },
-                    { participants: { some: { userId: req.user.id } } }
+                AND: [
+                    { participants: { some: { userId: req.user.id } } },
+                    { project: { customerId: req.user.id } }
                 ],
                 ...dateFilter
-            },
+            };
+        }
+
+        const meetings = await prisma.meeting.findMany({
+            where: meetingWhere,
             include: {
                 organizer: { select: { fullName: true } },
                 room: { select: { name: true } },
