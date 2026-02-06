@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Clock, Calendar, CheckCircle, AlertCircle, ChevronRight, LayoutGrid, List, Plus, Edit2, X, Save, MessageSquare } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Clock, Calendar, CheckCircle, AlertCircle, ChevronRight, LayoutGrid, List, Plus, Edit2, X, Save, MessageSquare, Sparkles, Bot, RefreshCcw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import api from '../services/api';
 import clsx from 'clsx';
 import { format, differenceInDays, eachDayOfInterval, isSameDay, addDays, startOfWeek } from 'date-fns';
@@ -7,10 +10,16 @@ import { useAuth } from '../context/AuthContext';
 
 const Reports = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
+
     const [users, setUsers] = useState([]);
     const [timeLogs, setTimeLogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [aiAnalysis, setAiAnalysis] = useState('');
+    const [loadingAI, setLoadingAI] = useState(false);
+    const [aiError, setAiError] = useState(null);
+
 
     const [viewMode, setViewMode] = useState('DASHBOARD'); // DASHBOARD, GANTT, LOGS
     const [showTaskModal, setShowTaskModal] = useState(false);
@@ -48,6 +57,34 @@ const Reports = () => {
             setLoading(false);
         }
     };
+
+    const fetchAIAnalysis = async () => {
+        setLoadingAI(true);
+        setAiError(null);
+        try {
+            const payload = {
+                overallStats: {
+                    totalProjects: overallStats.totalProjects,
+                    avgProgress: overallStats.avgProgress,
+                    activeUsers: overallStats.activeUsers,
+                    totalHours: overallStats.totalHours
+                },
+                projects: projects
+            };
+            const res = await api.post('ai/analyze', payload);
+            setAiAnalysis(res.data.analysis);
+            // Scroll to analysis
+            setTimeout(() => {
+                document.getElementById('ai-report-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        } catch (err) {
+            console.error('AI Analysis Failed:', err);
+            setAiError(err.response?.data?.message || 'Failed to generate AI insights.');
+        } finally {
+            setLoadingAI(false);
+        }
+    };
+
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
@@ -102,6 +139,14 @@ const Reports = () => {
                     <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2 flex items-center gap-3">
                         <BarChart3 className="text-primary" size={36} />
                         Analytics Hub
+                        <button
+                            onClick={fetchAIAnalysis}
+                            disabled={loadingAI}
+                            className="ml-4 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                        >
+                            {loadingAI ? <RefreshCcw size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                            {loadingAI ? 'Analyzing...' : 'AI Insights'}
+                        </button>
                     </h1>
                     <p className="text-gray-500 text-lg">Intelligent insights and project performance tracking</p>
                 </div>
@@ -138,6 +183,52 @@ const Reports = () => {
 
             {viewMode === 'DASHBOARD' && (
                 <>
+                    {/* AI Report Section */}
+                    {(loadingAI || aiAnalysis || aiError) && (
+                        <div id="ai-report-section" className="mb-8 bg-white rounded-[2.5rem] border border-primary/20 shadow-2xl shadow-primary/5 overflow-hidden animate-in slide-in-from-top-4 duration-500">
+                            <div className="p-6 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                                        <Bot size={24} />
+                                    </div>
+                                    <div>
+                                        <span className="font-black text-xs uppercase tracking-widest text-primary block leading-none mb-1">AI Executive Report</span>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Analyzed by Llama 3</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => { setAiAnalysis(''); setAiError(null); }} className="p-2 hover:bg-white rounded-xl text-gray-400 transition-colors">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="p-8 lg:p-10">
+                                {loadingAI ? (
+                                    <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                                        <RefreshCcw size={40} className="text-primary animate-spin" />
+                                        <p className="font-black text-gray-900 animate-pulse uppercase tracking-widest text-sm">Drafting Strategy...</p>
+                                    </div>
+                                ) : aiError ? (
+                                    <div className="py-10 text-center">
+                                        <AlertCircle size={40} className="text-red-500 mx-auto mb-4" />
+                                        <p className="font-bold text-red-900">{aiError}</p>
+                                        <button onClick={fetchAIAnalysis} className="mt-4 text-xs font-black text-primary underline">Try Again</button>
+                                    </div>
+                                ) : (
+                                    <div className="prose prose-slate max-w-none 
+                                        prose-headings:font-black prose-headings:tracking-tight prose-headings:text-gray-900
+                                        prose-h2:text-xl prose-h2:border-b prose-h2:pb-2 prose-h2:mt-8
+                                        prose-p:text-gray-600 prose-p:leading-relaxed prose-p:font-medium
+                                        prose-strong:font-black prose-strong:text-gray-900
+                                        prose-li:text-gray-600 prose-li:font-medium">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {aiAnalysis}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <StatCard icon={BarChart3} label="Total Projects" value={overallStats.totalProjects} color="blue" trend="+4% from last month" />
