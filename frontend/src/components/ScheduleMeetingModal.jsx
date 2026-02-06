@@ -63,7 +63,7 @@ const TimePicker = ({ label, value, onChange }) => {
                     value={minute}
                     onChange={(e) => onChange('minute', e.target.value)}
                 >
-                    {['00', '15', '30', '45'].map(m => (
+                    {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map(m => (
                         <option key={m} value={m}>{m}</option>
                     ))}
                 </select>

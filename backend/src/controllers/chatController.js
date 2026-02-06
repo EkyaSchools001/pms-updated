@@ -113,6 +113,12 @@ exports.sendMessage = async (req, res) => {
             return res.status(403).json({ error: 'You are not a participant of this chat' });
         }
 
+        // UN-DELETE chat for all participants (so it reappears if they deleted it)
+        await prisma.chatParticipant.updateMany({
+            where: { chatId },
+            data: { isDeleted: false }
+        });
+
         const message = await prisma.message.create({
             data: {
                 chatId,
@@ -194,9 +200,13 @@ exports.getChatHistory = async (req, res) => {
         if (!isParticipant) {
             return res.status(403).json({ error: 'Access denied' });
         }
-
         const messages = await prisma.message.findMany({
-            where: { chatId },
+            where: {
+                chatId,
+                createdAt: {
+                    gt: isParticipant.clearedAt || new Date(0) // Only show messages after cleared date
+                }
+            },
             orderBy: { createdAt: 'asc' },
             include: {
                 sender: { select: { id: true, fullName: true, profilePicture: true } },
@@ -218,6 +228,50 @@ exports.getChatHistory = async (req, res) => {
     }
 };
 
+// Clear chat history (hide messages for user)
+exports.clearChat = async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        const userId = req.user.id;
+
+        await prisma.chatParticipant.update({
+            where: {
+                chatId_userId: { chatId, userId }
+            },
+            data: {
+                clearedAt: new Date()
+            }
+        });
+
+        res.json({ message: 'Chat cleared' });
+    } catch (error) {
+        console.error('Error clearing chat:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Delete chat (hide from list)
+exports.deleteChat = async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        const userId = req.user.id;
+
+        await prisma.chatParticipant.update({
+            where: {
+                chatId_userId: { chatId, userId }
+            },
+            data: {
+                isDeleted: true
+            }
+        });
+
+        res.json({ message: 'Chat deleted' });
+    } catch (error) {
+        console.error('Error deleting chat:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Get user's chats
 exports.getUserChats = async (req, res) => {
     try {
@@ -226,7 +280,10 @@ exports.getUserChats = async (req, res) => {
         const chats = await prisma.chat.findMany({
             where: {
                 participants: {
-                    some: { userId },
+                    some: {
+                        userId,
+                        isDeleted: false
+                    },
                 },
             },
             include: {

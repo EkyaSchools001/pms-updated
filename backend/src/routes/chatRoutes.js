@@ -14,6 +14,8 @@ router.post('/message', validateChatAccess, chatController.sendMessage);
 router.put('/message/:messageId', chatController.editMessage);
 router.delete('/message/:messageId', chatController.deleteMessage);
 router.get('/:chatId/messages', validateChatAccess, chatController.getChatHistory);
+router.post('/:chatId/clear', validateChatAccess, chatController.clearChat);
+router.delete('/:chatId', validateChatAccess, chatController.deleteChat);
 router.get('/', chatController.getUserChats);
 
 module.exports = router;

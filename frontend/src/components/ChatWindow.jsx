@@ -307,6 +307,29 @@ const ChatWindow = ({ chat, onBack }) => {
         setDeleteTargetId(null);
     };
 
+    const handleClearChat = async () => {
+        if (!window.confirm('Are you sure you want to clear this chat history?')) return;
+        try {
+            await api.post(`chats/${chat.id}/clear`);
+            setMessages([]); // Clear locally
+            setActiveMenuId(null);
+        } catch (error) {
+            console.error('Error clearing chat:', error);
+            alert('Failed to clear chat');
+        }
+    };
+
+    const handleDeleteChat = async () => {
+        if (!window.confirm('Are you sure you want to delete this chat interaction? It will be removed from your list.')) return;
+        try {
+            await api.delete(`chats/${chat.id}`);
+            onBack(); // Go back to list
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+            alert('Failed to delete chat');
+        }
+    };
+
     if (!chat) return (
         <div className="flex-1 flex flex-col items-center justify-center bg-[#F8FAFC]">
             <div className="text-center space-y-4 max-w-sm px-6">
@@ -417,7 +440,30 @@ const ChatWindow = ({ chat, onBack }) => {
                     <button onClick={handleAudioCall} className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><Phone size={19} /></button>
                     <button onClick={handleVideoCall} className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><Video size={19} /></button>
                     <div className="w-[1px] h-4 bg-gray-200 mx-2"></div>
-                    <button className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><MoreVertical size={19} /></button>
+                    <div className="relative">
+                        <button
+                            onClick={() => setActiveMenuId(activeMenuId === 'chat-options' ? null : 'chat-options')}
+                            className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                        >
+                            <MoreVertical size={19} />
+                        </button>
+                        {activeMenuId === 'chat-options' && (
+                            <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 min-w-[160px] animate-in zoom-in-95">
+                                <button
+                                    onClick={() => handleClearChat()}
+                                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2.5 text-sm text-gray-600 font-medium"
+                                >
+                                    <XCircle size={16} /> Clear Chat
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteChat()}
+                                    className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-2.5 text-sm text-red-600 font-medium"
+                                >
+                                    <Trash2 size={16} /> Delete Chat
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
