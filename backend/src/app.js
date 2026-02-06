@@ -23,8 +23,31 @@ const app = express();
 const path = require('path');
 
 // Middleware
+// Middleware
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || '*',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'http://127.0.0.1:5173',
+            process.env.FRONTEND_URL
+        ].filter(Boolean);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            // For dev/testing, you might want to log this or be permissive
+            console.log('CORS blocked origin:', origin);
+            // Fallback for development convenience: allow all localhost
+            if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+                return callback(null, true);
+            }
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 };
 app.use(cors(corsOptions));

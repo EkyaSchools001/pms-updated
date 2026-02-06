@@ -9,7 +9,10 @@ import NotificationDropdown from '../components/NotificationDropdown';
 
 // Get API base URL for images
 // Get API base URL for images
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// If VITE_API_URL is set, use it.
+// If explicitly in production mode (import.meta.env.PROD), use relative path (empty string) so it uses current domain
+// If in dev mode (localhost), use localhost:5000
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : '');
 
 // Helper to get full image URL
 const getImageUrl = (path) => {

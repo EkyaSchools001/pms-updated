@@ -46,3 +46,125 @@
     at feed (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\streamsearch\lib\sbmh.js:219:14)
     at SBMH.push (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\streamsearch\lib\sbmh.js:104:16)
     at Multipart._write (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:567:19)
+
+[2026-02-06T04:47:11.932Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:11.935Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:12.679Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:21.900Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:21.902Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:37.433Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:37.436Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:43.587Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:43.618Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:45.353Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:48.913Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:50.567Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:51.982Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:47:58.097Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:00.009Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:00.020Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:00.042Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:04.928Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:04.969Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:04.972Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:06.434Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:08.688Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:09.598Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:09.867Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:14.682Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:14.912Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:16.800Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:17.013Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:18.929Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:18.934Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:19.149Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:21.131Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:21.360Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:22.962Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:23.194Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:25.596Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:25.756Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:27.466Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:27.476Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:27.678Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:29.443Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:48:29.634Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:45.252Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:45.464Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:46.464Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:49.030Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:51.421Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:52.794Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:52.796Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:59.551Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:50:59.552Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:01.073Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:03.434Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:04.285Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:04.544Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:05.743Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:07.250Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:07.252Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:13.516Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:13.571Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
+
+[2026-02-06T04:51:14.352Z] Error: ENOENT: no such file or directory, stat 'C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\frontend\dist\index.html'
