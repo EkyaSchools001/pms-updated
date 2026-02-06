@@ -32,6 +32,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     const navigate = useNavigate();
     const [upcomingBirthdays, setUpcomingBirthdays] = useState([]);
+    const [imgError, setImgError] = useState(false);
 
 
     useEffect(() => {
@@ -137,11 +138,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <div className="bg-[var(--bg-background)] rounded-2xl p-4 border border-[var(--border-color)] mb-2 group cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] border-2 border-[var(--bg-card)] shadow-sm flex items-center justify-center text-sm font-bold text-primary relative overflow-hidden">
-                                {user?.profilePicture ? (
+                                {user?.profilePicture && !imgError ? (
                                     <img
                                         src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
                                         alt={user.fullName}
                                         className="w-full h-full object-cover"
+                                        onError={() => setImgError(true)}
                                     />
                                 ) : (
                                     <span>{user?.fullName?.charAt(0) || 'U'}</span>

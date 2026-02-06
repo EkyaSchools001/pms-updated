@@ -42,6 +42,7 @@ const DashboardLayout = ({ children }) => {
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const [editFormData, setEditFormData] = useState({
         fullName: '',
         email: '',
@@ -234,11 +235,12 @@ const DashboardLayout = ({ children }) => {
                                 className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-background)] rounded-xl border border-[var(--border-color)] hover:bg-[var(--bg-card)] hover:border-primary/30 transition-colors cursor-pointer"
                             >
 
-                                {user?.profilePicture ? (
+                                {user?.profilePicture && !imgError ? (
                                     <img
                                         src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
                                         alt={user.fullName}
                                         className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                                        onError={() => setImgError(true)}
                                     />
                                 ) : (
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
