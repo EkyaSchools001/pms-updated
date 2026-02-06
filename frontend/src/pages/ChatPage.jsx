@@ -10,6 +10,11 @@ const ChatPage = () => {
     const initialChatId = searchParams.get('chatId');
 
     // Socket is now managed globally in AuthProvider
+    const [refreshSidebar, setRefreshSidebar] = useState(0);
+
+    const handleChatUpdate = () => {
+        setRefreshSidebar(prev => prev + 1);
+    };
 
     // Clear search param and local selection
     const handleBack = () => {
@@ -24,6 +29,7 @@ const ChatPage = () => {
                     onSelectChat={setSelectedChat}
                     activeChatId={selectedChat?.id}
                     initialChatId={initialChatId}
+                    refreshTrigger={refreshSidebar}
                 />
             </div>
 
@@ -31,6 +37,7 @@ const ChatPage = () => {
                 <ChatWindow
                     chat={selectedChat}
                     onBack={handleBack}
+                    onChatUpdated={handleChatUpdate}
                 />
             </div>
         </div>

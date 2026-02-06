@@ -229,21 +229,41 @@ exports.getChatHistory = async (req, res) => {
 };
 
 // Clear chat history (hide messages for user)
+// Clear chat history (hide messages for user or everyone)
 exports.clearChat = async (req, res) => {
     try {
         const { chatId } = req.params;
+        const { forEveryone } = req.body;
         const userId = req.user.id;
 
-        await prisma.chatParticipant.update({
-            where: {
-                chatId_userId: { chatId, userId }
-            },
-            data: {
-                clearedAt: new Date()
-            }
-        });
+        if (forEveryone) {
+            // Soft delete all messages in the chat
+            await prisma.message.updateMany({
+                where: { chatId },
+                data: {
+                    deletedAt: new Date(),
+                    content: 'This message was deleted',
+                    attachments: null
+                }
+            });
 
-        res.json({ message: 'Chat cleared' });
+            // Emit socket event to clear UI for everyone
+            const io = req.app.get('io');
+            io.to(chatId).emit('chat_cleared', { chatId });
+
+            res.json({ message: 'Chat cleared for everyone' });
+        } else {
+            // Clear for me only
+            await prisma.chatParticipant.update({
+                where: {
+                    chatId_userId: { chatId, userId }
+                },
+                data: {
+                    clearedAt: new Date()
+                }
+            });
+            res.json({ message: 'Chat cleared for you' });
+        }
     } catch (error) {
         console.error('Error clearing chat:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -251,21 +271,41 @@ exports.clearChat = async (req, res) => {
 };
 
 // Delete chat (hide from list)
+// Delete chat (hide from list or delete permanently)
 exports.deleteChat = async (req, res) => {
     try {
         const { chatId } = req.params;
+        const { forEveryone } = req.body;
         const userId = req.user.id;
 
-        await prisma.chatParticipant.update({
-            where: {
-                chatId_userId: { chatId, userId }
-            },
-            data: {
-                isDeleted: true
-            }
-        });
+        if (forEveryone) {
+            // Delete the chat entirely (Cascading delete will remove participants and messages if configured, 
+            // but Prisma might need manual cleanup if relations aren't cascade-delete in DB. 
+            // Assuming schema handles relations or we should delete manually to be safe. 
+            // Let's rely on Prisma `cancel/delete` or manual cleanup if needed. 
+            // For safety, let's delete messages first then chat.)
 
-        res.json({ message: 'Chat deleted' });
+            await prisma.message.deleteMany({ where: { chatId } });
+            await prisma.chatParticipant.deleteMany({ where: { chatId } });
+            await prisma.chat.delete({ where: { id: chatId } });
+
+            // Emit socket event
+            const io = req.app.get('io');
+            io.to(chatId).emit('chat_deleted', { chatId });
+
+            res.json({ message: 'Chat deleted for everyone' });
+        } else {
+            // Delete for me
+            await prisma.chatParticipant.update({
+                where: {
+                    chatId_userId: { chatId, userId }
+                },
+                data: {
+                    isDeleted: true
+                }
+            });
+            res.json({ message: 'Chat deleted for you' });
+        }
     } catch (error) {
         console.error('Error deleting chat:', error);
         res.status(500).json({ error: 'Internal server error' });

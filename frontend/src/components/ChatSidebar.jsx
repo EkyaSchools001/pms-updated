@@ -3,7 +3,7 @@ import api from '../services/api';
 import { Plus, MessageSquare, X, Search, MoreVertical, CheckCheck } from 'lucide-react';
 import { getSocket, subscribeToChatFeatures } from '../services/socketService';
 
-const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) => {
+const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId, refreshTrigger }) => {
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showNewChatModal, setShowNewChatModal] = useState(false);
@@ -33,8 +33,15 @@ const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) =
             });
             // Also listen for new messages to refresh sidebar order
             socket.on('receive_message', () => fetchChats());
+            socket.on('chat_deleted', () => fetchChats());
+            socket.on('chat_cleared', () => fetchChats());
+
+            return () => {
+                socket.off('chat_deleted');
+                socket.off('chat_cleared');
+            };
         }
-    }, []);
+    }, [refreshTrigger]);
 
     useEffect(() => {
         if (chats.length > 0 && initialChatId) {
@@ -260,32 +267,41 @@ const ChatSidebar = ({ onSelectChat, activeChatId, onNewChat, initialChatId }) =
                                 <p className="text-center text-gray-500 py-4">No contacts available</p>
                             ) : (
                                 <div className="space-y-4">
-                                    {['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'].map(role => {
-                                        const roleUsers = users.filter(u => u.role === role);
-                                        if (roleUsers.length === 0) return null;
-                                        return (
-                                            <div key={role}>
-                                                <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 px-2">{role}</div>
-                                                <div className="space-y-1">
-                                                    {roleUsers.map(user => (
-                                                        <button
-                                                            key={user.id}
-                                                            onClick={() => handleCreateChat(user.id)}
-                                                            className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                                                        >
-                                                            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                                                <img src={`https://ui-avatars.com/api/?name=${user.fullName}&background=random`} alt="" className="w-full h-full" />
-                                                            </div>
-                                                            <div>
-                                                                <div className="font-medium text-gray-900">{user.fullName}</div>
-                                                                <div className="text-xs text-gray-500 capitalize">{user.role.toLowerCase()}</div>
-                                                            </div>
-                                                        </button>
-                                                    ))}
+                                    {(() => {
+                                        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                                        let rolesToShow = ['ADMIN', 'MANAGER', 'TEAM_MEMBER', 'CUSTOMER'];
+
+                                        if (currentUser.role === 'TEAM_MEMBER') {
+                                            rolesToShow = rolesToShow.filter(r => r !== 'CUSTOMER');
+                                        }
+
+                                        return rolesToShow.map(role => {
+                                            const roleUsers = users.filter(u => u.role === role);
+                                            if (roleUsers.length === 0) return null;
+                                            return (
+                                                <div key={role}>
+                                                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 px-2">{role}</div>
+                                                    <div className="space-y-1">
+                                                        {roleUsers.map(user => (
+                                                            <button
+                                                                key={user.id}
+                                                                onClick={() => handleCreateChat(user.id)}
+                                                                className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                                                            >
+                                                                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                                                                    <img src={`https://ui-avatars.com/api/?name=${user.fullName}&background=random`} alt="" className="w-full h-full" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-medium text-gray-900">{user.fullName}</div>
+                                                                    <div className="text-xs text-gray-500 capitalize">{user.role.toLowerCase()}</div>
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })
+                                    })()}
                                 </div>
                             )}
                         </div>

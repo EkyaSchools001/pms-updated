@@ -4,8 +4,10 @@ import { joinChat, subscribeToMessages, subscribeToMessageUpdates, subscribeToCh
 import { Send, Paperclip, MoreVertical, Search, Phone, Video, ArrowLeft, Edit2, Trash2, XCircle, CheckCircle, ChevronDown, MessageSquare, Reply, Smile, X } from 'lucide-react';
 import { useCall } from '../context/CallContext';
 
-const ChatWindow = ({ chat, onBack }) => {
+const ChatWindow = ({ chat, onBack, onChatUpdated }) => {
     const [messages, setMessages] = useState([]);
+    // ...
+
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
     const userId = localStorage.getItem('userId');
@@ -308,11 +310,24 @@ const ChatWindow = ({ chat, onBack }) => {
     };
 
     const handleClearChat = async () => {
+        const forEveryone = window.confirm('Clear for everyone in this chat? Click OK for Everyone, Cancel for Just Me.');
+        // Note: The UI flow here is a bit tricky with just confirm/cancel. 
+        // Better UX: standard confirm, then maybe another prompt or just a checkbox.
+        // For simplicity requested: 
+        // Let's use two confirms to be clear, or a simple prompt.
+        // Actually, let's just ask: "Do you want to clear this for everyone? OK = Yes (All), Cancel = No (Just Me)"
+        // But what if they want to cancel entirely? 
+        // Let's rely on the first confirm being "Are you sure?" and then "For everyone?"
+
         if (!window.confirm('Are you sure you want to clear this chat history?')) return;
+
+        const deleteForEveryone = window.confirm('Also clear for other participants? (OK = Yes, Cancel = Just Me)');
+
         try {
-            await api.post(`chats/${chat.id}/clear`);
+            await api.post(`chats/${chat.id}/clear`, { forEveryone: deleteForEveryone });
             setMessages([]); // Clear locally
             setActiveMenuId(null);
+            if (onChatUpdated) onChatUpdated();
         } catch (error) {
             console.error('Error clearing chat:', error);
             alert('Failed to clear chat');
@@ -321,8 +336,12 @@ const ChatWindow = ({ chat, onBack }) => {
 
     const handleDeleteChat = async () => {
         if (!window.confirm('Are you sure you want to delete this chat interaction? It will be removed from your list.')) return;
+
+        const deleteForEveryone = window.confirm('Also delete for other participants? (OK = Yes, Cancel = Just Me)');
+
         try {
-            await api.delete(`chats/${chat.id}`);
+            await api.delete(`chats/${chat.id}`, { data: { forEveryone: deleteForEveryone } });
+            if (onChatUpdated) onChatUpdated();
             onBack(); // Go back to list
         } catch (error) {
             console.error('Error deleting chat:', error);
