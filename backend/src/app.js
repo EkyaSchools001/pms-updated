@@ -33,6 +33,7 @@ const corsOptions = {
             'http://localhost:5173',
             'http://localhost:3000',
             'http://127.0.0.1:5173',
+            'https://pms-m4u9.onrender.com', // Production URL
             process.env.FRONTEND_URL
         ].filter(Boolean);
 
