@@ -40,6 +40,7 @@ const DashboardLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [editFormData, setEditFormData] = useState({
@@ -234,11 +235,12 @@ const DashboardLayout = ({ children }) => {
                                 className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-background)] rounded-xl border border-[var(--border-color)] hover:bg-[var(--bg-card)] hover:border-primary/30 transition-colors cursor-pointer"
                             >
 
-                                {user?.profilePicture ? (
+                                {user?.profilePicture && !imgError ? (
                                     <img
                                         src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
                                         alt={user.fullName}
                                         className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                                        onError={() => setImgError(true)}
                                     />
                                 ) : (
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
@@ -261,11 +263,12 @@ const DashboardLayout = ({ children }) => {
                                     <div className="bg-gradient-to-r from-primary to-indigo-600 p-6 text-white">
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
-                                                {user?.profilePicture ? (
+                                                {user?.profilePicture && !imgError ? (
                                                     <img
                                                         src={`${getImageUrl(user.profilePicture)}?t=${new Date(user.updatedAt || Date.now()).getTime()}`}
                                                         alt={user.fullName}
                                                         className="w-16 h-16 rounded-full object-cover border-4 border-white/30 backdrop-blur-sm"
+                                                        onError={() => setImgError(true)}
                                                     />
                                                 ) : (
                                                     <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold border-2 border-white/30">
