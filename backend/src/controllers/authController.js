@@ -75,7 +75,8 @@ const login = async (req, res) => {
                 role: user.role,
                 fullName: user.fullName,
                 department: user.department,
-                campusAccess: user.campusAccess
+                campusAccess: user.campusAccess,
+                profilePicture: user.profilePicture
             },
         });
     } catch (error) {
@@ -88,7 +89,7 @@ const getMe = async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { id: true, email: true, role: true, fullName: true, department: true, phoneNumber: true, campusAccess: true }
+            select: { id: true, email: true, role: true, fullName: true, department: true, phoneNumber: true, campusAccess: true, profilePicture: true }
         });
         res.json(user);
     } catch (error) {

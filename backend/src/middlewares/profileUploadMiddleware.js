@@ -24,14 +24,18 @@ const storage = multer.diskStorage({
 
 // File filter (Images only)
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    // Allowed extensions
+    const allowedFileTypes = /jpeg|jpg|png|gif|webp|svg|jfif/;
+    // Check extension
+    const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
+    // Check mime
+    const mimetype = allowedFileTypes.test(file.mimetype);
 
     if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+        console.error(`❌ Upload Rejected: ${file.originalname} (${file.mimetype})`);
+        cb(new Error(`Invalid file type. Uploaded: ${file.mimetype}. Allowed: JPEG, PNG, GIF, WebP, SVG.`));
     }
 };
 

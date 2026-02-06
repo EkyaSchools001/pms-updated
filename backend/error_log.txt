@@ -22,3 +22,27 @@
     at IncomingMessage.emit (node:events:519:28)
     at endReadableNT (node:internal/streams/readable:1698:12)
     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+
+[2026-02-06T04:27:18.791Z] Error: Invalid file type. Only JPEG, PNG, and WebP are allowed.
+    at fileFilter (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\src\middlewares\profileUploadMiddleware.js:34:12)
+    at wrappedFileFilter (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\multer\index.js:44:7)
+    at Multipart.<anonymous> (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\multer\lib\make-middleware.js:132:7)
+    at Multipart.emit (node:events:508:28)
+    at HeaderParser.cb (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:567:19)
+
+[2026-02-06T04:27:30.805Z] Error: Invalid file type. Only JPEG, PNG, and WebP are allowed.
+    at fileFilter (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\src\middlewares\profileUploadMiddleware.js:34:12)
+    at wrappedFileFilter (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\multer\index.js:44:7)
+    at Multipart.<anonymous> (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\multer\lib\make-middleware.js:132:7)
+    at Multipart.emit (node:events:508:28)
+    at HeaderParser.cb (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\Ekya\Desktop\ekyaprojects\pms-updated\backend\node_modules\busboy\lib\types\multipart.js:567:19)
