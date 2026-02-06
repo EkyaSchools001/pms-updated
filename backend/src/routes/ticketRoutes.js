@@ -10,13 +10,16 @@ const {
     deleteTicket
 } = require('../controllers/ticketController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
+const upload = require('../middlewares/uploadMiddleware');
+
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticate);
 
-router.post('/', createTicket);
+router.post('/', upload.array('attachments', 5), createTicket);
+
 router.get('/', getTickets);
 router.get('/recent', getRecentTickets);
 router.get('/:id/status', getTicketStatus);

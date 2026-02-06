@@ -24,6 +24,12 @@ const createTicket = async (req, res) => {
         else if (priority === 'MEDIUM') slaDeadline.setHours(slaDeadline.getHours() + 48);
         else slaDeadline.setHours(slaDeadline.getHours() + 120); // 5 days for LOW
 
+        // Handle Attachments
+        let attachmentPaths = [];
+        if (req.files && req.files.length > 0) {
+            attachmentPaths = req.files.map(file => `/uploads/${file.filename}`);
+        }
+
         const ticket = await prisma.ticket.create({
             data: {
                 title,
@@ -36,6 +42,7 @@ const createTicket = async (req, res) => {
                 category,
                 assignedDepartment,
                 slaDeadline,
+                attachments: attachmentPaths.length > 0 ? JSON.stringify(attachmentPaths) : null,
                 lastReminderSentAt: new Date()
             },
             include: {

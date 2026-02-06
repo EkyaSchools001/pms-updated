@@ -298,6 +298,7 @@ model Ticket {
   assignee   User?   @relation("TicketAssignee", fields: [assigneeId], references: [id])
 
   lastReminderSentAt DateTime?
+  attachments        String? // JSON string or URL for multiple attachments
   comments           TicketComment[]
 }
 

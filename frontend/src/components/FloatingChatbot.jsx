@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Ticket, Search, HelpCircle, Clock, User, MapPin, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { MessageCircle, X, Send, Ticket, Search, HelpCircle, Clock, User, MapPin, AlertCircle, CheckCircle2, ArrowLeft, Paperclip, Image as ImageIcon, FileText } from 'lucide-react';
 import api from '../services/api';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
@@ -19,7 +19,8 @@ const FloatingChatbot = () => {
     ]);
     const [inputText, setInputText] = useState('');
     const [mode, setMode] = useState('OPTIONS'); // OPTIONS, TICKET_LOOKUP, AWAITING_ID, RAISING_TICKET_TITLE, etc.
-    const [ticketForm, setTicketForm] = useState({ title: '', description: '', campus: '', category: '', priority: 'MEDIUM' });
+    const [ticketForm, setTicketForm] = useState({ title: '', description: '', campus: '', category: '', priority: 'MEDIUM', attachments: [] });
+    const fileInputRef = useRef(null);
     const chatEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -131,17 +132,53 @@ const FloatingChatbot = () => {
         }
     };
 
+    const handleFileChange = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            setTicketForm(prev => ({ ...prev, attachments: [...prev.attachments, ...files] }));
+            addMessage(`📎 Added ${files.length} file(s)`, 'user');
+
+            // Automatically proceed to campus step after a brief delay
+            setTimeout(() => {
+                setMode('RAISING_TICKET_CAMPUS');
+                addMessage('Great! Now, which campus are you reporting from?', 'bot', 'campus-choice');
+            }, 800);
+        }
+    };
+
+    const removeFile = (index) => {
+        setTicketForm(prev => ({
+            ...prev,
+            attachments: prev.attachments.filter((_, i) => i !== index)
+        }));
+    };
+
     const submitTicket = async (finalForm) => {
         setMode('SUBMITTING');
         addMessage('Creating your ticket...', 'bot');
         try {
-            const res = await api.post('tickets', finalForm);
+            const formData = new FormData();
+            formData.append('title', finalForm.title);
+            formData.append('description', finalForm.description);
+            formData.append('campus', finalForm.campus);
+            formData.append('category', finalForm.category);
+            formData.append('priority', finalForm.priority);
+
+            finalForm.attachments.forEach(file => {
+                formData.append('attachments', file);
+            });
+
+            const res = await api.post('tickets', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             addMessage(`✅ Ticket created successfully! Your ID is: ${res.data.id.slice(0, 8).toUpperCase()}`, 'bot');
             setTimeout(() => {
                 addMessage('You can track it anytime using the "Check Status" option.', 'bot');
                 addMessage('What would you like to do next?', 'bot', 'restart-menu');
                 setMode('OPTIONS');
-                setTicketForm({ title: '', description: '', campus: '', category: '', priority: 'MEDIUM' });
+                setTicketForm({ title: '', description: '', campus: '', category: '', priority: 'MEDIUM', attachments: [] });
             }, 1000);
         } catch (err) {
             addMessage('❌ Failed to create ticket. Please try again later or contact IT directly.', 'bot');
@@ -191,9 +228,14 @@ const FloatingChatbot = () => {
             }, 500);
         } else if (mode === 'RAISING_TICKET_DESC') {
             setTicketForm(prev => ({ ...prev, description: text }));
+            setMode('RAISING_TICKET_ATTACHMENTS');
+            setTimeout(() => {
+                addMessage('Do you want to add any images or documents? (Optional)', 'bot', 'attachment-step');
+            }, 500);
+        } else if (mode === 'RAISING_TICKET_ATTACHMENTS') {
             setMode('RAISING_TICKET_CAMPUS');
             setTimeout(() => {
-                addMessage('Which campus are you reporting from?', 'bot', 'campus-choice');
+                addMessage('Great! Now, which campus are you reporting from?', 'bot', 'campus-choice');
             }, 500);
         } else {
             setTimeout(() => {
@@ -205,6 +247,7 @@ const FloatingChatbot = () => {
     const resetChat = () => {
         setMessages([{ id: 1, text: 'Hi! How can I help you today?', sender: 'bot', type: 'options' }]);
         setMode('OPTIONS');
+        setTicketForm({ title: '', description: '', campus: '', category: '', priority: 'MEDIUM', attachments: [] });
     };
 
     return (
@@ -311,6 +354,52 @@ const FloatingChatbot = () => {
                                                 {cat}
                                             </button>
                                         ))}
+                                    </div>
+                                )}
+
+                                {m.type === 'attachment-step' && (
+                                    <div className="mt-4 space-y-3">
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            className="hidden"
+                                            multiple
+                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => fileInputRef.current.click()}
+                                                className="flex-1 p-3 bg-gray-50 hover:bg-primary/10 hover:text-primary rounded-xl font-bold transition-all border border-gray-100 flex items-center justify-center gap-2"
+                                            >
+                                                <Paperclip size={14} /> Add Files
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setMode('RAISING_TICKET_CAMPUS');
+                                                    addMessage('Great! Now, which campus are you reporting from?', 'bot', 'campus-choice');
+                                                }}
+                                                className="flex-1 p-3 bg-primary text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center"
+                                            >
+                                                Next Step
+                                            </button>
+
+                                        </div>
+                                        {ticketForm.attachments.length > 0 && (
+                                            <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar p-1">
+                                                {ticketForm.attachments.map((file, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 text-[10px]">
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            {file.type.startsWith('image/') ? <ImageIcon size={12} /> : <FileText size={12} />}
+                                                            <span className="truncate">{file.name}</span>
+                                                        </div>
+                                                        <button onClick={() => removeFile(idx)} className="text-red-500 hover:text-red-700">
+                                                            <X size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -456,5 +545,3 @@ const FloatingChatbot = () => {
 };
 
 export default FloatingChatbot;
-
-
